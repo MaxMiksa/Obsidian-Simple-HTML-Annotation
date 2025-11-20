@@ -1,4 +1,4 @@
-[For English](README_en.md)
+[For English](README.md)
 
 # Obsidian-Simple-HTML-Annotation V1.1.0
 
