@@ -8,7 +8,7 @@ const COMMENT_REGEX = /<span class="ob-comment" data-note="(.*?)">(.*?)<\/span>/
 export default class AnnotationPlugin extends Plugin {
 	tooltipEl: HTMLElement | null = null;
 
-	async onload() {
+	onload() {
 		// 1. 注册“添加批注”命令 (保留快捷键功能)
 		this.addCommand({
 			id: 'add-annotation-html',
