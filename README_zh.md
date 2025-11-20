@@ -1,3 +1,5 @@
+[For English](README_en.md)
+
 # Obsidian-Simple-HTML-Annotation V1.1.0
 
 这款插件名为 **Simple HTML Annotation**（极简 HTML 批注）： 在Obsidian 中实现**插入后自动隐藏批注内容、鼠标悬停时立即展示批注内容**，同时保持 Markdown 文件的纯文本兼容性及本地保存的安全性。
@@ -5,9 +7,10 @@
 The plugin is called Simple HTML Annotation: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian**. At the same time, it maintains the plain text compatibility and local storage security of Markdown files.
 
 ---
+
 ### ✨ 插件功能速览 (Features)
 
-![插件使用说明](https://github.com/user-attachments/assets/05ab4eae-33ad-4687-b9d0-49426c792ee1)
+![插件使用说明 v1 1 0 gif](https://github.com/user-attachments/assets/0e3bd7f0-c70a-48db-b2d7-f6a814c9a396)
 
 ---
 
@@ -39,7 +42,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
 
 ---
 
-### 使用方法 (How to Use)
+### 使用方法
 
 **第一步：添加批注**
 1.  在笔记中用鼠标选中一段文字（例如：“量子力学”）,使用快捷键Alt+c（使用前需自行设置）。
@@ -60,10 +63,10 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
 
 ---
 
-### 🚀 未来改进路线图 (Roadmap)
+### 🚀 未来改进路线图
 
 
-#### 1. 交互体验升级 (UI/UX)
+- [x]  1. 交互体验升级 (UI/UX) (2025-11-20完成)
 *   **右键菜单集成**：目前只能通过 `Ctrl+P` 调用。考虑添加一个 `EditorMenu` 事件，让用户选中文字后**右键**就能看到“添加批注”选项。
 *   **侧边栏视图 (Sidebar View)**：
     *   开发一个侧边栏面板，列出当前文档中的**所有批注**。
@@ -72,7 +75,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
     *   允许用户选择不同的批注颜色（如：红色代表疑问，绿色代表想法，黄色代表待办）。
     *   实现方式：在 HTML 中添加不同的 class，如 `class="ob-comment red"`。
 
-#### 2. 功能增强
+- [x] 2. 功能增强 (2025-11-20完成)
 *   **一键删除/编辑命令**：
     *   目前删除需要手动删代码。可以开发一个命令：光标在批注上时，执行“删除批注”，自动把 HTML 标签剥离，只留下纯文本。
     *   执行“编辑批注”，弹窗修改 `data-note` 的内容，而不用去改源码。
@@ -80,7 +83,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
     *   你最初的需求中提到了“图标”。可以在设置里增加一个开关：选择是“下划线模式”还是“文末图标模式”。
     *   图标模式下，使用 CSS `::after` 伪元素在文本后加一个 `📝` 符号，鼠标悬浮在图标上显示内容。
 
-#### 3. 导出与汇总
+- [ ] 3. 导出与汇总 (暂搁置)
 *   **批注汇总**：增加一个功能，一键将当前文档的所有批注提取出来，生成一个新的 Markdown 列表（包含：原文、批注内容、位置链接）。这对于读书笔记非常有用。
 
 ---
