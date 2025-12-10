@@ -18,7 +18,7 @@ const COLOR_OPTIONS: { value: AnnotationColor; label: string; hex: string }[] = 
 	{ value: "gray", label: "灰色", hex: "#95a5a6" },
 ];
 
-const DEFAULT_COLOR: AnnotationColor = COLOR_OPTIONS[0].value;
+const DEFAULT_COLOR: AnnotationColor = "";
 
 function buildAnnotationClass(color: AnnotationColor): string {
 	return color ? "ob-comment " + color : "ob-comment";
@@ -84,7 +84,7 @@ export default class AnnotationPlugin extends Plugin {
 		COLOR_OPTIONS.forEach(opt => {
 			const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
 			// 使用实心圆，颜色硬编码，确保显示
-			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
 			addIcon(iconId, svg);
 		});
 
@@ -437,7 +437,12 @@ export default class AnnotationPlugin extends Plugin {
 		}
 
 		const cursor = editor.getCursor();
-		editor.setValue(text);
+		
+		// 使用 replaceRange 替代 setValue 以保留撤销历史
+		const lastLine = editor.lastLine();
+		const lastLineLen = editor.getLine(lastLine).length;
+		editor.replaceRange(text, { line: 0, ch: 0 }, { line: lastLine, ch: lastLineLen });
+		
 		editor.setCursor(cursor);
 		new Notice("当前文件的批注已转换为安全格式");
 	}

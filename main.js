@@ -42,7 +42,7 @@ var COLOR_OPTIONS = [
   { value: "purple", label: "\u7D2B\u8272", hex: "#9b59b6" },
   { value: "gray", label: "\u7070\u8272", hex: "#95a5a6" }
 ];
-var DEFAULT_COLOR = COLOR_OPTIONS[0].value;
+var DEFAULT_COLOR = "";
 function buildAnnotationClass(color) {
   return color ? "ob-comment " + color : "ob-comment";
 }
@@ -81,7 +81,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   onload() {
     COLOR_OPTIONS.forEach((opt) => {
       const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
       (0, import_obsidian.addIcon)(iconId, svg);
     });
     this.addCommand({
@@ -348,7 +348,9 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
       return;
     }
     const cursor = editor.getCursor();
-    editor.setValue(text);
+    const lastLine = editor.lastLine();
+    const lastLineLen = editor.getLine(lastLine).length;
+    editor.replaceRange(text, { line: 0, ch: 0 }, { line: lastLine, ch: lastLineLen });
     editor.setCursor(cursor);
     new import_obsidian.Notice("\u5F53\u524D\u6587\u4EF6\u7684\u6279\u6CE8\u5DF2\u8F6C\u6362\u4E3A\u5B89\u5168\u683C\u5F0F");
   }

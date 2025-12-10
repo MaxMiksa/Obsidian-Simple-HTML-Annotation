@@ -34,6 +34,12 @@
 - **Technical Implementation**:
   - `main.ts`: Used `menu.addSeparator()` and `setIcon`.
 
+### Fixes & Optimizations
+- **Default Color Fix**: Corrected the default color issue where it appeared as Red instead of Orange.
+- **Build Sync**: Fixed the issue where the build artifact contained oversized icons (100x100 -> 16x16).
+- **Undo Experience**: Optimized the `normalizeCurrentFileAnnotations` command to preserve the user's Undo History.
+- **Dependency Safety**: Corrected the registry source in the lockfile to ensure compatible dependency installation.
+
 ## v1.2.0 — Multi-line Annotations & UX Refinements (2025-12-09)
 
 ### Feature 1: Multi-line annotations with safe storage
