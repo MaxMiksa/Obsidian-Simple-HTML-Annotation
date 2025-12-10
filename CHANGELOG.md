@@ -1,3 +1,39 @@
+## v1.3.0 – Color Revolution & UX Renewal (Dec 10, 2025)
+
+### Feature 1: New Color System & Visual Interaction
+- **Summary**: Expanded annotation colors to 8, introduced a new visual color picker and colorful icons in the right-click menu.
+- **Problem Solved**: The old dropdown menu was cumbersome and lacked visual feedback.
+- **Feature Details**:
+  - New Colors: Red, Orange (Default), Yellow, Green, Cyan, Blue, Purple, Gray.
+  - Modal: Replaced dropdown with circular color swatches, supporting keyboard navigation (Tab/Enter) and remembering the last used color.
+  - Context Menu: Submenu displays real colored dot icons for intuitive preview.
+  - New Commands: Independent commands registered for each color (e.g., "Add Annotation (Red)") for easy hotkey binding.
+- **Technical Implementation**:
+  - `main.ts`: Implemented dynamic SVG registration via `addIcon`.
+  - `styles.css`: Rewrote `.annotation-color-item` styles for hover/active/focus states.
+
+### Feature 2: Native UI & Mobile Support
+- **Summary**: Overhauled the tooltip and modal styles to seamlessly blend with Obsidian's native look, added mobile support.
+- **Problem Solved**: The old black tooltip looked out of place; modal width was restrictive; no mobile support.
+- **Feature Details**:
+  - Tooltip: Uses native CSS variables (`--background-secondary`, etc.) for theme adaptability; added slide-up animation; widened to 800px; increased font size.
+  - Modal: Inputs use native Obsidian form styles with larger font.
+  - Mobile: Supports clicking annotations to show tooltips.
+  - Toggle Switch: New command "Toggle Annotation Visibility" to switch clean reading mode on/off.
+- **Technical Implementation**:
+  - `styles.css`: Extensive use of `var(--...)` replacing hardcoded colors; added `transition` animations.
+  - `main.ts`: Added `click` event listeners; implemented `toggle-annotation-visibility`.
+
+### Feature 3: Context Menu Refactoring
+- **Summary**: Optimized the structure, order, and visual feedback of the right-click menu.
+- **Problem Solved**: Menu items lacked hierarchy and were scattered.
+- **Feature Details**:
+  - Order adjusted to: Add -> Edit -> Change Color -> Delete.
+  - All items now have icons (highlighter, pencil, palette, trash).
+  - Used separators to distinguish plugin functions from other menu items.
+- **Technical Implementation**:
+  - `main.ts`: Used `menu.addSeparator()` and `setIcon`.
+
 ## v1.2.0 — Multi-line Annotations & UX Refinements (2025-12-09)
 
 ### Feature 1: Multi-line annotations with safe storage

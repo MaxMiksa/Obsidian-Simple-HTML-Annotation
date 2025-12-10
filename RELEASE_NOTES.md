@@ -1,3 +1,31 @@
+## v1.3.0 – Color Revolution & UX Renewal / 色彩革命与交互焕新 (2025年12月10日)
+
+## ✨ 全新 8 色系统与原生交互体验
+
+**不仅是颜色更多，更是从视觉到触觉的全方位原生化升级。**
+
+| 类别 | 详细内容 |
+| :--- | :--- |
+| **🎨 八色批注** | 新增红、橙、黄、绿、青、蓝、紫、灰 8 种颜色，满足复杂标注需求。 |
+| **👁️ 可视化选色** | 弹窗新增圆形色块选择器，支持键盘操作；右键菜单支持彩色图标预览。 |
+| **🛠️ 原生 UI** | 悬浮框（Tooltip）与弹窗完全适配 Obsidian 原生主题，支持动画上浮效果。 |
+| **📱 移动端支持** | 支持点击批注显示内容，填补了移动端无法查看批注的空白。 |
+| **⚡ 极速操作** | 新增特定颜色快捷命令、一键显隐开关，右键菜单结构全面优化。 |
+
+## ✨ 8-Color System & Native UX Overhaul
+
+**More than just colors—a complete native experience upgrade.**
+
+| Category | Details |
+| :--- | :--- |
+| **🎨 8-Color Palette** | Added Red, Orange, Yellow, Green, Cyan, Blue, Purple, Gray to suit complex needs. |
+| **👁️ Visual Picker** | New circular color swatches in modal; real colored icons in the context menu. |
+| **🛠️ Native UI** | Tooltips and modals now fully adapt to Obsidian themes with smooth animations. |
+| **📱 Mobile Support** | Added click-to-view support for mobile devices. |
+| **⚡ Efficiency** | Added color-specific commands, toggle visibility switch, and optimized menu layout. |
+
+---
+
 ## v1.2.0 — Multi-line & Interaction Polish / 多行与交互优化 (2025-12-09)
 
 ## ✨多行批注与交互升级
@@ -30,6 +58,15 @@
 | :--- | :--- |
 | **批注操作** | 命令和右键菜单添加批注，光标位于批注时可直接编辑或删除。 |
 | **悬浮展示** | 悬浮气泡展示批注内容，实时预览隐藏 HTML 标签仅保留高亮文本。 |
+
+## ✨First public cut
+
+**Add hoverable notes to text with quick edit/delete actions.**
+
+| Category | Details |
+| :--- | :--- |
+| **Annotation flow** | Command and context menu to insert notes; edit or delete when the cursor is on an annotation. |
+| **Hover display** | Tooltip shows note content; Live Preview hides raw HTML and keeps highlighted text. |
 
 ## ✨First public cut
 

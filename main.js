@@ -32,10 +32,15 @@ var import_view = require("@codemirror/view");
 var import_state = require("@codemirror/state");
 var COMMENT_REGEX = /<span class="ob-comment(?:\s+([\w-]+))?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
 var COLOR_OPTIONS = [
-  { value: "", label: "\u9ED8\u8BA4\uFF08\u6A59\u8272\uFF09" },
-  { value: "red", label: "\u7EA2\u8272 \xB7 \u7591\u95EE" },
-  { value: "green", label: "\u7EFF\u8272 \xB7 \u60F3\u6CD5" },
-  { value: "yellow", label: "\u9EC4\u8272 \xB7 \u5F85\u529E" }
+  { value: "red", label: "\u7EA2\u8272", hex: "#e5484d" },
+  { value: "", label: "\u6A59\u8272 (\u9ED8\u8BA4)", hex: "#ff9900" },
+  // Orange is default (empty class)
+  { value: "yellow", label: "\u9EC4\u8272", hex: "#e6c229" },
+  { value: "green", label: "\u7EFF\u8272", hex: "#2f9d62" },
+  { value: "cyan", label: "\u9752\u8272", hex: "#1abc9c" },
+  { value: "blue", label: "\u84DD\u8272", hex: "#3498db" },
+  { value: "purple", label: "\u7D2B\u8272", hex: "#9b59b6" },
+  { value: "gray", label: "\u7070\u8272", hex: "#95a5a6" }
 ];
 var DEFAULT_COLOR = COLOR_OPTIONS[0].value;
 function buildAnnotationClass(color) {
@@ -67,17 +72,54 @@ function normalizeAnnotationsInText(text) {
   result += text.slice(lastIndex);
   return { text: changed ? result : text, changed };
 }
-var AnnotationPlugin = class extends import_obsidian.Plugin {
+var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   constructor() {
     super(...arguments);
     this.tooltipEl = null;
   }
+  // 记忆上次使用的颜色
   onload() {
+    COLOR_OPTIONS.forEach((opt) => {
+      const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+      (0, import_obsidian.addIcon)(iconId, svg);
+    });
     this.addCommand({
       id: "add-annotation-html",
-      name: "\u6DFB\u52A0\u6279\u6CE8",
+      name: "\u6DFB\u52A0\u6279\u6CE8 (\u9ED8\u8BA4)",
       editorCallback: (editor, view) => {
         this.handleAddCommand(editor);
+      }
+    });
+    COLOR_OPTIONS.forEach((opt) => {
+      if (opt.value === "") return;
+      this.addCommand({
+        id: `add-annotation-${opt.value}`,
+        name: `\u6DFB\u52A0\u6279\u6CE8 (${opt.label})`,
+        editorCallback: (editor) => {
+          this.handleAddCommand(editor, opt.value);
+        }
+      });
+    });
+    this.addCommand({
+      id: "toggle-annotation-visibility",
+      name: "\u663E\u793A/\u9690\u85CF\u6279\u6CE8\u6837\u5F0F",
+      callback: () => {
+        document.body.classList.toggle("ob-hide-annotations");
+      }
+    });
+    this.addCommand({
+      id: "edit-current-annotation",
+      name: "\u7F16\u8F91\u5F53\u524D\u6279\u6CE8",
+      editorCallback: (editor) => {
+        this.handleEditCommand(editor);
+      }
+    });
+    this.addCommand({
+      id: "delete-current-annotation",
+      name: "\u5220\u9664\u5F53\u524D\u6279\u6CE8",
+      editorCallback: (editor) => {
+        this.handleDeleteCommand(editor);
       }
     });
     this.addCommand({
@@ -97,6 +139,7 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
     this.registerEditorExtension(livePreviewAnnotationPlugin);
     this.createTooltipElement();
     this.registerDomEvent(document, "mouseover", (evt) => {
+      if (document.body.classList.contains("ob-hide-annotations")) return;
       const target = evt.target;
       if (target && target.hasClass && target.hasClass("ob-comment")) {
         const note = target.getAttribute("data-note");
@@ -109,7 +152,23 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
         this.hideTooltip();
       }
     });
-    this.registerDomEvent(document, "mousedown", () => {
+    this.registerDomEvent(document, "click", (evt) => {
+      if (document.body.classList.contains("ob-hide-annotations")) return;
+      const target = evt.target;
+      if (target && target.hasClass && target.hasClass("ob-comment")) {
+        const note = target.getAttribute("data-note");
+        if (note) this.showTooltip(evt, note);
+      } else {
+        if (this.tooltipEl && !this.tooltipEl.contains(target)) {
+          this.hideTooltip();
+        }
+      }
+    });
+    this.registerDomEvent(document, "mousedown", (evt) => {
+      const target = evt.target;
+      if (target && target.hasClass && target.hasClass("ob-comment")) {
+        return;
+      }
       this.hideTooltip();
     });
     this.registerDomEvent(document, "keydown", () => {
@@ -128,30 +187,76 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
   }
   // --- 核心逻辑区 ---
   /**
+   * 命令触发：编辑当前批注
+   */
+  handleEditCommand(editor) {
+    const existing = this.findAnnotationAtCursor(editor);
+    if (existing) {
+      new AnnotationModal(this.app, existing.note, existing.color || DEFAULT_COLOR, (newNote, newColor) => {
+        const safeNote = escapeDataNote(newNote);
+        const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existing.text}</span>`;
+        editor.replaceRange(replacement, existing.from, existing.to);
+      }).open();
+    } else {
+      new import_obsidian.Notice("\u5149\u6807\u5904\u6CA1\u6709\u6279\u6CE8");
+    }
+  }
+  /**
+   * 命令触发：删除当前批注
+   */
+  handleDeleteCommand(editor) {
+    const existing = this.findAnnotationAtCursor(editor);
+    if (existing) {
+      editor.replaceRange(existing.text, existing.from, existing.to);
+    } else {
+      new import_obsidian.Notice("\u5149\u6807\u5904\u6CA1\u6709\u6279\u6CE8");
+    }
+  }
+  /**
    * 处理右键菜单逻辑
    */
   handleContextMenu(menu, editor) {
     const existingAnnotation = this.findAnnotationAtCursor(editor);
     if (existingAnnotation) {
+      menu.addSeparator();
       menu.addItem((item) => {
-        item.setTitle("\u7F16\u8F91\u6279\u6CE8").setIcon("pencil").onClick(() => {
-          new AnnotationModal(this.app, existingAnnotation.note, existingAnnotation.color || DEFAULT_COLOR, (newNote, newColor) => {
-            const safeNote = escapeDataNote(newNote);
-            const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existingAnnotation.text}</span>`;
-            editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
-          }).open();
+        item.setTitle("\u6DFB\u52A0\u6279\u6CE8").setIcon("highlighter").onClick(() => {
+          const selection = editor.getSelection();
+          if (selection) this.performAddAnnotation(editor, selection);
+          else new import_obsidian.Notice("\u8BF7\u5148\u9009\u62E9\u6587\u672C\u4EE5\u6DFB\u52A0\u65B0\u6279\u6CE8");
         });
       });
       menu.addItem((item) => {
+        item.setTitle("\u7F16\u8F91\u6279\u6CE8").setIcon("pencil").onClick(() => {
+          this.handleEditCommand(editor);
+        });
+      });
+      menu.addItem((item) => {
+        item.setTitle(" - \u4FEE\u6539\u989C\u8272").setIcon("palette");
+        if (item.setSubmenu) {
+          const subMenu = item.setSubmenu();
+          COLOR_OPTIONS.forEach((opt) => {
+            const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+            subMenu.addItem((subItem) => {
+              subItem.setTitle(opt.label).setIcon(iconId).onClick(() => {
+                const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
+                editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
+              });
+            });
+          });
+        }
+      });
+      menu.addItem((item) => {
         item.setTitle("\u5220\u9664\u6279\u6CE8").setIcon("trash").onClick(() => {
-          editor.replaceRange(existingAnnotation.text, existingAnnotation.from, existingAnnotation.to);
+          this.handleDeleteCommand(editor);
         });
       });
     } else {
       const selection = editor.getSelection();
       if (selection && selection.trim().length > 0) {
+        menu.addSeparator();
         menu.addItem((item) => {
-          item.setTitle("\u6DFB\u52A0\u6279\u6CE8").setIcon("message-square").onClick(() => {
+          item.setTitle("\u6DFB\u52A0\u6279\u6CE8").setIcon("highlighter").onClick(() => {
             this.performAddAnnotation(editor, selection);
           });
         });
@@ -161,7 +266,7 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
   /**
    * 命令触发的添加逻辑
    */
-  handleAddCommand(editor) {
+  handleAddCommand(editor, forcedColor = null) {
     const selection = editor.getSelection();
     if (!selection) {
       new import_obsidian.Notice("\u8BF7\u5148\u9009\u62E9\u4E00\u6BB5\u6587\u672C");
@@ -171,13 +276,15 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
       new import_obsidian.Notice("\u4E0D\u652F\u6301\u5728\u5DF2\u6709\u6279\u6CE8\u4E0A\u5D4C\u5957\u6279\u6CE8\uFF0C\u8BF7\u5148\u5220\u9664\u65E7\u6279\u6CE8");
       return;
     }
-    this.performAddAnnotation(editor, selection);
+    this.performAddAnnotation(editor, selection, forcedColor);
   }
   /**
    * 执行添加批注动作
    */
-  performAddAnnotation(editor, selectionText) {
-    new AnnotationModal(this.app, "", DEFAULT_COLOR, (noteContent, colorChoice) => {
+  performAddAnnotation(editor, selectionText, forcedColor = null) {
+    const initialColor = forcedColor !== null ? forcedColor : _AnnotationPlugin.lastUsedColor;
+    new AnnotationModal(this.app, "", initialColor, (noteContent, colorChoice) => {
+      _AnnotationPlugin.lastUsedColor = colorChoice;
       const safeNote = escapeDataNote(noteContent);
       const replacement = `<span class="${buildAnnotationClass(colorChoice)}" data-note="${safeNote}">${selectionText}</span>`;
       editor.replaceSelection(replacement);
@@ -265,13 +372,17 @@ var AnnotationPlugin = class extends import_obsidian.Plugin {
     }
   }
 };
+_AnnotationPlugin.lastUsedColor = DEFAULT_COLOR;
+var AnnotationPlugin = _AnnotationPlugin;
 var AnnotationModal = class extends import_obsidian.Modal {
   constructor(app, defaultValue, defaultColor, onSubmit) {
     super(app);
-    this.colorSelectEl = null;
+    this.colorLabelEl = null;
     this.defaultValue = defaultValue;
     this.defaultColor = defaultColor;
+    this.selectedColor = defaultColor || DEFAULT_COLOR;
     this.onSubmit = onSubmit;
+    this.modalEl.addClass("ob-annotation-modal-container");
   }
   onOpen() {
     const { contentEl } = this;
@@ -281,20 +392,46 @@ var AnnotationModal = class extends import_obsidian.Modal {
       attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" }
     });
     inputEl.value = this.defaultValue;
-    inputEl.focus();
-    if (this.defaultValue) inputEl.select();
+    setTimeout(() => {
+      inputEl.focus();
+      if (this.defaultValue) inputEl.select();
+    }, 0);
     const colorWrapper = contentEl.createDiv({ cls: "annotation-color-field" });
-    colorWrapper.createEl("div", { text: "\u6279\u6CE8\u989C\u8272", cls: "setting-item-name" });
-    const selectEl = colorWrapper.createEl("select", { attr: { style: "width: 100%; margin-bottom: 10px;" } });
-    const colorOptions = [...COLOR_OPTIONS];
-    if (this.defaultColor && !colorOptions.some((opt) => opt.value === this.defaultColor)) {
-      colorOptions.push({ value: this.defaultColor, label: `\u4FDD\u7559\u539F\u6837\uFF08${this.defaultColor}\uFF09` });
-    }
-    colorOptions.forEach((opt) => {
-      const optionEl = selectEl.createEl("option", { text: opt.label, value: opt.value });
-      if (opt.value === this.defaultColor) optionEl.selected = true;
+    const colorHeader = colorWrapper.createDiv({
+      cls: "setting-item-name",
+      attr: { style: "margin-bottom: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;" }
     });
-    this.colorSelectEl = selectEl;
+    colorHeader.createSpan({ text: "\u6279\u6CE8\u989C\u8272" });
+    this.colorLabelEl = colorHeader.createSpan({
+      cls: "annotation-color-label",
+      attr: { style: "font-weight: normal; font-size: 0.9em; color: var(--text-muted);" }
+    });
+    const colorContainer = colorWrapper.createDiv({ cls: "annotation-color-container" });
+    COLOR_OPTIONS.forEach((opt) => {
+      const colorItem = colorContainer.createDiv({
+        cls: "annotation-color-item",
+        attr: { "aria-label": opt.label, "title": opt.label, "tabindex": "0" }
+        // 支持键盘 Tab 聚焦
+      });
+      colorItem.style.backgroundColor = opt.hex;
+      if (opt.value === this.selectedColor) {
+        colorItem.addClass("is-active");
+        this.updateColorLabel(opt.label);
+      }
+      const selectAction = () => {
+        colorContainer.querySelectorAll(".annotation-color-item").forEach((el) => el.removeClass("is-active"));
+        colorItem.addClass("is-active");
+        this.selectedColor = opt.value;
+        this.updateColorLabel(opt.label);
+      };
+      colorItem.addEventListener("click", selectAction);
+      colorItem.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectAction();
+        }
+      });
+    });
     inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && e.shiftKey) {
         return;
@@ -312,10 +449,13 @@ var AnnotationModal = class extends import_obsidian.Modal {
       this.submit(inputEl.value);
     });
   }
+  updateColorLabel(label) {
+    if (this.colorLabelEl) {
+      this.colorLabelEl.setText(label);
+    }
+  }
   submit(value) {
-    var _a, _b;
-    const chosenColor = (_b = (_a = this.colorSelectEl) == null ? void 0 : _a.value) != null ? _b : DEFAULT_COLOR;
-    this.onSubmit(value, chosenColor);
+    this.onSubmit(value, this.selectedColor);
     this.close();
   }
   onClose() {

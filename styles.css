@@ -1,62 +1,78 @@
-/* 1. 批注文本的基础样式（高亮/下划线） */
+/* ==========================================================================
+   1. 批注高亮样式 (Annotation Highlights)
+   ========================================================================== */
+
+/* 默认样式 (橙色) */
 .ob-comment {
-    border-bottom: 2px solid #ff9900; /* 橙色下划线 */
-    background-color: rgba(255, 153, 0, 0.15); /* 轻微背景色 */
+    --highlight-color: #ff9900;
+    --highlight-bg-alpha: 0.15;
+    --highlight-bg-hover-alpha: 0.35;
+    
+    border-bottom: 2px solid var(--highlight-color);
+    background-color: rgba(255, 153, 0, var(--highlight-bg-alpha));
     cursor: help;
     transition: background-color 0.2s;
     border-radius: 3px;
     padding: 0 2px;
 }
 
+.theme-light .ob-comment { --highlight-bg-alpha: 0.2; } /* 浅色模式稍微加深背景 */
+
 .ob-comment:hover {
-    background-color: rgba(255, 153, 0, 0.4);
+    background-color: rgba(255, 153, 0, var(--highlight-bg-hover-alpha));
 }
 
-.ob-comment.red {
-    border-bottom-color: #e5484d;
-    background-color: rgba(229, 72, 77, 0.15);
-}
+/* 颜色变体 */
+.ob-comment.red { --highlight-color: #e5484d; background-color: rgba(229, 72, 77, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.red:hover { background-color: rgba(229, 72, 77, var(--highlight-bg-hover-alpha)); }
 
-.ob-comment.red:hover {
-    background-color: rgba(229, 72, 77, 0.35);
-}
+.ob-comment.yellow { --highlight-color: #e6c229; background-color: rgba(230, 194, 41, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.yellow:hover { background-color: rgba(230, 194, 41, var(--highlight-bg-hover-alpha)); }
 
-.ob-comment.green {
-    border-bottom-color: #2f9d62;
-    background-color: rgba(47, 157, 98, 0.15);
-}
+.ob-comment.green { --highlight-color: #2f9d62; background-color: rgba(47, 157, 98, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.green:hover { background-color: rgba(47, 157, 98, var(--highlight-bg-hover-alpha)); }
 
-.ob-comment.green:hover {
-    background-color: rgba(47, 157, 98, 0.35);
-}
+.ob-comment.cyan { --highlight-color: #1abc9c; background-color: rgba(26, 188, 156, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.cyan:hover { background-color: rgba(26, 188, 156, var(--highlight-bg-hover-alpha)); }
 
-.ob-comment.yellow {
-    border-bottom-color: #e6c229;
-    background-color: rgba(230, 194, 41, 0.18);
-}
+.ob-comment.blue { --highlight-color: #3498db; background-color: rgba(52, 152, 219, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.blue:hover { background-color: rgba(52, 152, 219, var(--highlight-bg-hover-alpha)); }
 
-.ob-comment.yellow:hover {
-    background-color: rgba(230, 194, 41, 0.4);
-}
+.ob-comment.purple { --highlight-color: #9b59b6; background-color: rgba(155, 89, 182, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.purple:hover { background-color: rgba(155, 89, 182, var(--highlight-bg-hover-alpha)); }
 
-/* 2. 悬浮弹窗 (Tooltip) 的样式 */
-/* 我们将使用 JS 动态创建这个元素，这是它的皮肤 */
+.ob-comment.gray { --highlight-color: #95a5a6; background-color: rgba(149, 165, 166, var(--highlight-bg-alpha)); border-bottom-color: var(--highlight-color); }
+.ob-comment.gray:hover { background-color: rgba(149, 165, 166, var(--highlight-bg-hover-alpha)); }
+
+
+/* ==========================================================================
+   2. 悬浮弹窗样式 (Tooltip) - Native Look
+   ========================================================================== */
 body .ob-annotation-tooltip {
     position: absolute;
-    background-color: #222;
-    color: #eee;
+    /* 使用 Obsidian 原生变量 */
+    background-color: var(--background-secondary); 
+    color: var(--text-normal);
+    /* 整合原有边框逻辑 */
+    border: 1px solid var(--modifier-border);
+    box-shadow: var(--shadow-l);
+    
     padding: 8px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    
+    /* 字体大小：介于 small 和 medium 之间 */
+    font-size: calc((var(--font-ui-small) + var(--font-ui-medium)) / 2);
     line-height: 1.4;
-    max-width: 300px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 9999; /* 确保在最上层 */
-    pointer-events: none; /* 让鼠标事件穿透，防止闪烁 */
+    max-width: 800px;
+    
+    z-index: var(--layer-popover);
+    pointer-events: none;
+    
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.2s, transform 0.2s;
-    border: 1px solid #444;
+    /* 初始状态向下偏移 8px，显示时上浮到 0 */
+    transform: translateY(8px);
+    /* 增加 transition 动效，使用 cubic-bezier 增加一点弹性感 */
+    transition: opacity 0.2s ease-out, transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 body .ob-annotation-tooltip.is-visible {
@@ -64,8 +80,105 @@ body .ob-annotation-tooltip.is-visible {
     transform: translateY(0);
 }
 
-/* 3. Live Preview (CodeMirror) 特有样式 */
-/* 用来隐藏 HTML 标签的类 */
+
+/* ==========================================================================
+   3. 模态框颜色选择器 (Color Picker UI)
+   ========================================================================== */
+.annotation-color-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 4px 2px;
+}
+
+.annotation-color-item {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent; 
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* 键盘聚焦状态 */
+.annotation-color-item:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+.annotation-color-item:hover {
+    transform: scale(1.15);
+}
+
+/* 选中状态 */
+.annotation-color-item.is-active {
+    border-color: var(--background-primary);
+    outline: 2px solid var(--interactive-accent);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.theme-dark .annotation-color-item {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* ==========================================================================
+   4. Live Preview 辅助
+   ========================================================================== */
 .cm-ob-comment-tag-hide {
     display: none;
+}
+
+/* ==========================================================================
+   5. 弹窗 UI 增强 (Modal UI Enhancements)
+   ========================================================================== */
+
+/* 1. 放宽弹窗宽度 */
+.ob-annotation-modal-container {
+    width: 800px !important; 
+    max-width: 90vw !important;
+}
+
+/* 2. 输入框美化 */
+.annotation-input {
+    background-color: var(--background-modifier-form-field);
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+    border-radius: var(--input-radius);
+    padding: 10px;
+    font-family: var(--font-text);
+    /* 字体调大 */
+    font-size: var(--font-ui-medium); 
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    resize: vertical;
+}
+
+.annotation-input:focus {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+    outline: none;
+}
+
+.modal-button-container {
+    margin-top: 20px;
+}
+
+/* ==========================================================================
+   6. 一键开关 (Toggle Visibility)
+   ========================================================================== */
+/* 当 body 拥有此 class 时，隐藏批注的视觉样式 */
+body.ob-hide-annotations .ob-comment {
+    border-bottom: none !important;
+    background-color: transparent !important;
+}
+
+/* 同时隐藏 Tooltip */
+body.ob-hide-annotations .ob-annotation-tooltip {
+    display: none !important;
 }

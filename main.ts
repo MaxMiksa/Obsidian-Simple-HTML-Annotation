@@ -1,4 +1,4 @@
-﻿import { App, Editor, MarkdownView, Modal, Plugin, Menu, Notice } from 'obsidian';
+﻿import { App, Editor, MarkdownView, Modal, Plugin, Menu, Notice, addIcon } from 'obsidian';
 import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
@@ -7,11 +7,15 @@ type AnnotationColor = string;
 // 定义 HTML 标签的正则结构 (支持多行 + 颜色 class)
 const COMMENT_REGEX = /<span class="ob-comment(?:\s+([\w-]+))?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
 
-const COLOR_OPTIONS: { value: AnnotationColor; label: string }[] = [
-	{ value: "", label: "默认（橙色）" },
-	{ value: "red", label: "红色 · 疑问" },
-	{ value: "green", label: "绿色 · 想法" },
-	{ value: "yellow", label: "黄色 · 待办" },
+const COLOR_OPTIONS: { value: AnnotationColor; label: string; hex: string }[] = [
+	{ value: "red", label: "红色", hex: "#e5484d" },
+	{ value: "", label: "橙色 (默认)", hex: "#ff9900" }, // Orange is default (empty class)
+	{ value: "yellow", label: "黄色", hex: "#e6c229" },
+	{ value: "green", label: "绿色", hex: "#2f9d62" },
+	{ value: "cyan", label: "青色", hex: "#1abc9c" },
+	{ value: "blue", label: "蓝色", hex: "#3498db" },
+	{ value: "purple", label: "紫色", hex: "#9b59b6" },
+	{ value: "gray", label: "灰色", hex: "#95a5a6" },
 ];
 
 const DEFAULT_COLOR: AnnotationColor = COLOR_OPTIONS[0].value;
@@ -73,14 +77,61 @@ function normalizeAnnotationsInText(text: string): { text: string; changed: bool
 
 export default class AnnotationPlugin extends Plugin {
 	tooltipEl: HTMLElement | null = null;
+	static lastUsedColor: AnnotationColor = DEFAULT_COLOR; // 记忆上次使用的颜色
 
 	onload() {
-		// 1. 注册“添加批注”命令 (保留快捷键功能)
+		// 0. 注册彩色圆点图标 (用于右键菜单)
+		COLOR_OPTIONS.forEach(opt => {
+			const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+			// 使用实心圆，颜色硬编码，确保显示
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+			addIcon(iconId, svg);
+		});
+
+		// 1. 注册“添加批注”命令
 		this.addCommand({
 			id: 'add-annotation-html',
-			name: '添加批注',
+			name: '添加批注 (默认)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.handleAddCommand(editor);
+			}
+		});
+
+		// 注册特定颜色命令
+		COLOR_OPTIONS.forEach(opt => {
+			if (opt.value === "") return;
+			this.addCommand({
+				id: `add-annotation-${opt.value}`,
+				name: `添加批注 (${opt.label})`,
+				editorCallback: (editor: Editor) => {
+					this.handleAddCommand(editor, opt.value);
+				}
+			});
+		});
+		
+		// 注册一键开关命令
+		this.addCommand({
+			id: 'toggle-annotation-visibility',
+			name: '显示/隐藏批注样式',
+			callback: () => {
+				document.body.classList.toggle('ob-hide-annotations');
+			}
+		});
+
+		// 注册编辑/删除快捷键命令
+		this.addCommand({
+			id: 'edit-current-annotation',
+			name: '编辑当前批注',
+			editorCallback: (editor: Editor) => {
+				this.handleEditCommand(editor);
+			}
+		});
+
+		this.addCommand({
+			id: 'delete-current-annotation',
+			name: '删除当前批注',
+			editorCallback: (editor: Editor) => {
+				this.handleDeleteCommand(editor);
 			}
 		});
 
@@ -108,8 +159,11 @@ export default class AnnotationPlugin extends Plugin {
 		// 3. 初始化全局 Tooltip
 		this.createTooltipElement();
 
-		// 4. 注册全局鼠标悬浮事件
+		// 4. 注册全局鼠标悬浮事件 (桌面端)
 		this.registerDomEvent(document, 'mouseover', (evt: MouseEvent) => {
+			// 如果隐藏模式开启，不显示 tooltip
+			if (document.body.classList.contains('ob-hide-annotations')) return;
+
 			const target = evt.target as HTMLElement;
 			if (target && target.hasClass && target.hasClass('ob-comment')) {
 				const note = target.getAttribute('data-note');
@@ -124,10 +178,31 @@ export default class AnnotationPlugin extends Plugin {
 			}
 		});
 
-		// 额外的隐藏触发：点击任意鼠标键 / 任意键盘按键
-		this.registerDomEvent(document, 'mousedown', () => {
+		// 移动端/点击支持：点击批注显示 Tooltip
+		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+			if (document.body.classList.contains('ob-hide-annotations')) return;
+			
+			const target = evt.target as HTMLElement;
+			if (target && target.hasClass && target.hasClass('ob-comment')) {
+				const note = target.getAttribute('data-note');
+				if (note) this.showTooltip(evt, note);
+			} else {
+				// 点击空白处隐藏 (仅当不是 tooltip 本身)
+				if (this.tooltipEl && !this.tooltipEl.contains(target)) {
+					this.hideTooltip();
+				}
+			}
+		});
+		
+		// 修正 mousedown: 只有当点击的不是批注时才隐藏，避免跟 click 冲突
+		this.registerDomEvent(document, 'mousedown', (evt: MouseEvent) => {
+			const target = evt.target as HTMLElement;
+			if (target && target.hasClass && target.hasClass('ob-comment')) {
+				return; // 点击的是批注，交给 click 处理
+			}
 			this.hideTooltip();
 		});
+
 		this.registerDomEvent(document, 'keydown', () => {
 			this.hideTooltip();
 		});
@@ -149,6 +224,34 @@ export default class AnnotationPlugin extends Plugin {
 	// --- 核心逻辑区 ---
 
 	/**
+	 * 命令触发：编辑当前批注
+	 */
+	handleEditCommand(editor: Editor) {
+		const existing = this.findAnnotationAtCursor(editor);
+		if (existing) {
+			new AnnotationModal(this.app, existing.note, existing.color || DEFAULT_COLOR, (newNote, newColor) => {
+				const safeNote = escapeDataNote(newNote);
+				const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existing.text}</span>`;
+				editor.replaceRange(replacement, existing.from, existing.to);
+			}).open();
+		} else {
+			new Notice("光标处没有批注");
+		}
+	}
+
+	/**
+	 * 命令触发：删除当前批注
+	 */
+	handleDeleteCommand(editor: Editor) {
+		const existing = this.findAnnotationAtCursor(editor);
+		if (existing) {
+			editor.replaceRange(existing.text, existing.from, existing.to);
+		} else {
+			new Notice("光标处没有批注");
+		}
+	}
+
+	/**
 	 * 处理右键菜单逻辑
 	 */
 	handleContextMenu(menu: Menu, editor: Editor) {
@@ -156,34 +259,60 @@ export default class AnnotationPlugin extends Plugin {
 		const existingAnnotation = this.findAnnotationAtCursor(editor);
 
 		if (existingAnnotation) {
-			// === 场景 A：光标在批注上 -> 显示 编辑/删除 ===
+			// === 场景 A：光标在批注上 ===
 			
-			// 1. 编辑批注
+			menu.addSeparator();
+
+			// 1. 添加批注
+			menu.addItem((item) => {
+				item
+					.setTitle("添加批注")
+					.setIcon("highlighter")
+					.onClick(() => {
+						const selection = editor.getSelection();
+						if(selection) this.performAddAnnotation(editor, selection);
+						else new Notice("请先选择文本以添加新批注");
+					});
+			});
+
+			// 2. 编辑批注
 			menu.addItem((item) => {
 				item
 					.setTitle("编辑批注")
 					.setIcon("pencil")
 					.onClick(() => {
-						// 打开弹窗，传入原有的笔记内容
-						new AnnotationModal(this.app, existingAnnotation.note, existingAnnotation.color || DEFAULT_COLOR, (newNote, newColor) => {
-							const safeNote = escapeDataNote(newNote);
-							// 重组 HTML，保持原文文本不变
-							const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existingAnnotation.text}</span>`;
-							
-							// 精确替换范围
-							editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
-						}).open();
+						this.handleEditCommand(editor);
 					});
 			});
 
-			// 2. 删除批注
+			// 3. 修改颜色 (子菜单)
+			menu.addItem((item) => {
+				item.setTitle(" - 修改颜色").setIcon("palette");
+				// @ts-ignore
+				if (item.setSubmenu) {
+					const subMenu = item.setSubmenu();
+					COLOR_OPTIONS.forEach(opt => {
+						const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+						subMenu.addItem((subItem: any) => {
+							subItem.setTitle(opt.label)
+								   .setIcon(iconId) // 使用注册的彩色图标
+								   .onClick(() => {
+									   // 直接修改颜色
+									   const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
+									   editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
+								   });
+						});
+					});
+				}
+			});
+
+			// 4. 删除批注
 			menu.addItem((item) => {
 				item
 					.setTitle("删除批注")
 					.setIcon("trash")
 					.onClick(() => {
-						// 直接用纯文本替换掉 HTML 标签
-						editor.replaceRange(existingAnnotation.text, existingAnnotation.from, existingAnnotation.to);
+						this.handleDeleteCommand(editor);
 					});
 			});
 
@@ -191,10 +320,12 @@ export default class AnnotationPlugin extends Plugin {
 			// === 场景 B：光标不在批注上 -> 检查是否有选区 -> 显示 添加 ===
 			const selection = editor.getSelection();
 			if (selection && selection.trim().length > 0) {
+				menu.addSeparator();
+
 				menu.addItem((item) => {
 					item
 						.setTitle("添加批注")
-						.setIcon("message-square")
+						.setIcon("highlighter")
 						.onClick(() => {
 							this.performAddAnnotation(editor, selection);
 						});
@@ -206,7 +337,7 @@ export default class AnnotationPlugin extends Plugin {
 	/**
 	 * 命令触发的添加逻辑
 	 */
-	handleAddCommand(editor: Editor) {
+	handleAddCommand(editor: Editor, forcedColor: AnnotationColor | null = null) {
 		const selection = editor.getSelection();
 		if (!selection) {
 			new Notice("请先选择一段文本");
@@ -217,14 +348,20 @@ export default class AnnotationPlugin extends Plugin {
 			new Notice("不支持在已有批注上嵌套批注，请先删除旧批注");
 			return;
 		}
-		this.performAddAnnotation(editor, selection);
+		this.performAddAnnotation(editor, selection, forcedColor);
 	}
 
 	/**
 	 * 执行添加批注动作
 	 */
-	performAddAnnotation(editor: Editor, selectionText: string) {
-		new AnnotationModal(this.app, "", DEFAULT_COLOR, (noteContent, colorChoice) => {
+	performAddAnnotation(editor: Editor, selectionText: string, forcedColor: AnnotationColor | null = null) {
+		// 优先使用强制颜色(如来自快捷命令)，否则使用记忆的颜色
+		const initialColor = forcedColor !== null ? forcedColor : AnnotationPlugin.lastUsedColor;
+
+		new AnnotationModal(this.app, "", initialColor, (noteContent, colorChoice) => {
+			// 更新记忆的颜色 (通常即使是强制颜色操作，也更新记忆比较符合直觉，方便连续操作)
+			AnnotationPlugin.lastUsedColor = colorChoice;
+
 			const safeNote = escapeDataNote(noteContent);
 			const replacement = `<span class="${buildAnnotationClass(colorChoice)}" data-note="${safeNote}">${selectionText}</span>`;
 			editor.replaceSelection(replacement);
@@ -334,14 +471,17 @@ class AnnotationModal extends Modal {
 	result: string;
 	defaultValue: string;
 	defaultColor: AnnotationColor;
-	colorSelectEl: HTMLSelectElement | null = null;
+	selectedColor: AnnotationColor;
+	colorLabelEl: HTMLElement | null = null; // 显示当前选中的颜色名称
 	onSubmit: (result: string, color: AnnotationColor) => void;
 
 	constructor(app: App, defaultValue: string, defaultColor: AnnotationColor, onSubmit: (result: string, color: AnnotationColor) => void) {
 		super(app);
 		this.defaultValue = defaultValue;
 		this.defaultColor = defaultColor;
+		this.selectedColor = defaultColor || DEFAULT_COLOR; // 确保有选中值
 		this.onSubmit = onSubmit;
+		this.modalEl.addClass("ob-annotation-modal-container");
 	}
 
 	onOpen() {
@@ -355,25 +495,64 @@ class AnnotationModal extends Modal {
 		
 		// 填入默认值
 		inputEl.value = this.defaultValue;
-		inputEl.focus();
-		// 如果是编辑模式，全选文本方便修改
-		if (this.defaultValue) inputEl.select();
+		// 稍微延迟聚焦，确保 UI 渲染完成
+		setTimeout(() => {
+			inputEl.focus();
+			// 如果是编辑模式，全选文本方便修改
+			if (this.defaultValue) inputEl.select();
+		}, 0);
 
+		// --- 颜色选择区域 ---
 		const colorWrapper = contentEl.createDiv({ cls: "annotation-color-field" });
-		colorWrapper.createEl("div", { text: "批注颜色", cls: "setting-item-name" });
-		const selectEl = colorWrapper.createEl("select", { attr: { style: "width: 100%; margin-bottom: 10px;" } });
-
-		const colorOptions = [...COLOR_OPTIONS];
-		if (this.defaultColor && !colorOptions.some(opt => opt.value === this.defaultColor)) {
-			colorOptions.push({ value: this.defaultColor, label: `保留原样（${this.defaultColor}）` });
-		}
-
-		colorOptions.forEach(opt => {
-			const optionEl = selectEl.createEl("option", { text: opt.label, value: opt.value });
-			if (opt.value === this.defaultColor) optionEl.selected = true;
+		
+		const colorHeader = colorWrapper.createDiv({ 
+			cls: "setting-item-name", 
+			attr: { style: "margin-bottom: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;" } 
 		});
+		colorHeader.createSpan({ text: "批注颜色" });
+		this.colorLabelEl = colorHeader.createSpan({ 
+			cls: "annotation-color-label", 
+			attr: { style: "font-weight: normal; font-size: 0.9em; color: var(--text-muted);" } 
+		});
+		
+		const colorContainer = colorWrapper.createDiv({ cls: "annotation-color-container" });
+		
+		// 渲染颜色选项圆点
+		COLOR_OPTIONS.forEach(opt => {
+			const colorItem = colorContainer.createDiv({ 
+				cls: "annotation-color-item",
+				attr: { "aria-label": opt.label, "title": opt.label, "tabindex": "0" } // 支持键盘 Tab 聚焦
+			});
+			colorItem.style.backgroundColor = opt.hex;
 
-		this.colorSelectEl = selectEl as HTMLSelectElement;
+			// 检查是否为当前选中颜色
+			if (opt.value === this.selectedColor) {
+				colorItem.addClass("is-active");
+				this.updateColorLabel(opt.label);
+			}
+
+			// 选中逻辑
+			const selectAction = () => {
+				// 移除其他选中状态
+				colorContainer.querySelectorAll(".annotation-color-item").forEach(el => el.removeClass("is-active"));
+				// 选中当前
+				colorItem.addClass("is-active");
+				// 更新状态
+				this.selectedColor = opt.value;
+				this.updateColorLabel(opt.label);
+			};
+
+			// 鼠标点击
+			colorItem.addEventListener("click", selectAction);
+
+			// 键盘操作 (Enter 或 Space)
+			colorItem.addEventListener("keydown", (e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					selectAction();
+				}
+			});
+		});
 
 		inputEl.addEventListener("keydown", (e) => {
 			if (e.key === "Enter" && e.shiftKey) {
@@ -398,9 +577,14 @@ class AnnotationModal extends Modal {
 		});
 	}
 
+	updateColorLabel(label: string) {
+		if (this.colorLabelEl) {
+			this.colorLabelEl.setText(label);
+		}
+	}
+
 	submit(value: string) {
-		const chosenColor = this.colorSelectEl?.value ?? DEFAULT_COLOR;
-		this.onSubmit(value, chosenColor);
+		this.onSubmit(value, this.selectedColor);
 		this.close();
 	}
 

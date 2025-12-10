@@ -10,17 +10,23 @@ The plugin is called **Simple HTML Annotation**: It allows you to **automaticall
 
 ***
 
-### 📝 Key Features & User Manual
+### User Manual
 
-*   **Select and Annotate**: Select any text and quickly add an annotation or note using a command.
-*   **Hover to View**: When the mouse hovers over the annotated text, a black tooltip bubble automatically appears displaying the annotation content.
+*   **Quick Annotation**: Select text and use commands to add notes instantly.
+*   **Hover Display**: Mouse over annotated text to see the note in a native-styled, animated tooltip.
 *   **Immersive Editing (Live Preview)**:
-    *   In **Editing Mode (Live Preview)**, the plugin automatically hides the lengthy HTML tags (`<span...>`), only applying an orange underline to the text to keep the writing interface clean.
-    *   The source code only expands automatically when the cursor moves inside the annotated text, allowing for easy modification.
-*   **Reading Mode Support**: Hover display is also supported in **Reading View**.
-*   **Data Security**: All annotations are stored in the document using standard HTML `<span>` tags. Even if you uninstall the plugin, the annotation content remains safely within the document source code and will not be lost.
-*   **Annotation Repair Utilities**: Added `normalizeAnnotationsInText` and two commands (“Fix annotations in current file” and “Fix annotations in all Markdown files”) to re-encode legacy data-note newlines/special characters into a safe format, preventing Obsidian Markdown parsing from breaking.
-*   **Color-Coded Annotations**: Pick a color (red/green/yellow) in the popup; the inserted span gets classes like `class="ob-comment red"` so the highlight matches your intent.
+    *   Automatically hides verbose HTML tags (`<span...>`) in Edit Mode, showing only an underline.
+    *   Source code reveals only when the cursor enters the annotation.
+*   **Colorful Annotations (8 Colors)**:
+    *   Supports **Red, Orange, Yellow, Green, Cyan, Blue, Purple, Gray**.
+    *   **Visual Picker**: Select colors via circular swatches in the modal (keyboard accessible).
+    *   **Right-Click Preview**: Context menu shows real colored icons.
+*   **Mobile Support**: Click on annotated text on mobile devices to view the note.
+*   **Efficiency**:
+    *   **Shortcuts**: Bind hotkeys to specific colors (e.g., "Add Red Annotation").
+    *   **Toggle Visibility**: One command to hide/show all annotation styles for a clean reading experience.
+*   **Data Safety**: Annotations are stored as standard HTML `<span>` tags; safe even if the plugin is uninstalled.
+*   **Auto-Repair**: One-click fix for legacy data-note formatting issues.
 
 <img width="600" height="250" alt="image" src="https://github.com/user-attachments/assets/db8f682d-3e7f-45b8-bcd2-5ff41665edbc" />
 
