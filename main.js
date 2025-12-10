@@ -81,7 +81,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   onload() {
     COLOR_OPTIONS.forEach((opt) => {
       const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" viewBox="0 0 24 24" style="overflow: visible"><circle cx="12" cy="20" r="10" style="fill:${opt.hex};stroke:${opt.hex};stroke-width:1;" /></svg>`;
       (0, import_obsidian.addIcon)(iconId, svg);
     });
     this.addCommand({
@@ -325,8 +325,12 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     this.tooltipEl = document.body.createDiv({ cls: "ob-annotation-tooltip" });
   }
   showTooltip(evt, text) {
+    var _a;
     if (!this.tooltipEl) return;
-    this.tooltipEl.innerText = text;
+    this.tooltipEl.empty();
+    const decodedText = decodeDataNote(text);
+    const sourcePath = ((_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path) || "";
+    import_obsidian.MarkdownRenderer.render(this.app, decodedText, this.tooltipEl, sourcePath, this);
     this.tooltipEl.addClass("is-visible");
     const x = evt.pageX;
     const y = evt.pageY - 40;
@@ -358,20 +362,32 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
    * 扫描并修复库内所有 Markdown 文件的批注 data-note
    */
   async normalizeAllMarkdownFiles() {
+    new import_obsidian.Notice("\u5F00\u59CB\u626B\u63CF\u5E93\u6587\u4EF6\uFF0C\u8BF7\u7A0D\u5019...");
     const files = this.app.vault.getMarkdownFiles();
-    let fixedCount = 0;
+    const filesToFix = [];
     for (const file of files) {
       const original = await this.app.vault.read(file);
-      const { text, changed } = normalizeAnnotationsInText(original);
-      if (!changed) continue;
-      await this.app.vault.modify(file, text);
-      fixedCount++;
+      const { changed } = normalizeAnnotationsInText(original);
+      if (changed) {
+        filesToFix.push(file);
+      }
     }
-    if (fixedCount === 0) {
+    if (filesToFix.length === 0) {
       new import_obsidian.Notice("\u672A\u53D1\u73B0\u9700\u8981\u4FEE\u590D\u7684\u6279\u6CE8");
-    } else {
-      new import_obsidian.Notice(`\u5DF2\u4FEE\u590D ${fixedCount} \u4E2A Markdown \u6587\u4EF6\u7684\u6279\u6CE8`);
+      return;
     }
+    new BatchFixConfirmModal(this.app, filesToFix, async () => {
+      let fixedCount = 0;
+      for (const file of filesToFix) {
+        const original = await this.app.vault.read(file);
+        const { text, changed } = normalizeAnnotationsInText(original);
+        if (changed) {
+          await this.app.vault.modify(file, text);
+          fixedCount++;
+        }
+      }
+      new import_obsidian.Notice(`\u5DF2\u6210\u529F\u4FEE\u590D ${fixedCount} \u4E2A Markdown \u6587\u4EF6\u7684\u6279\u6CE8`);
+    }).open();
   }
 };
 _AnnotationPlugin.lastUsedColor = DEFAULT_COLOR;
@@ -463,6 +479,35 @@ var AnnotationModal = class extends import_obsidian.Modal {
   onClose() {
     const { contentEl } = this;
     contentEl.empty();
+  }
+};
+var BatchFixConfirmModal = class extends import_obsidian.Modal {
+  constructor(app, filesToFix, onConfirm) {
+    super(app);
+    this.filesToFix = filesToFix;
+    this.onConfirm = onConfirm;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.createEl("h2", { text: "\u26A0\uFE0F \u6279\u91CF\u4FEE\u590D\u786E\u8BA4" });
+    contentEl.createEl("p", {
+      text: `\u626B\u63CF\u53D1\u73B0\u5171\u6709 ${this.filesToFix.length} \u4E2A\u6587\u4EF6\u5305\u542B\u65E7\u683C\u5F0F\u6216\u9700\u8981\u89C4\u8303\u5316\u7684\u6279\u6CE8\u3002`
+    });
+    contentEl.createEl("p", {
+      text: "\u6267\u884C\u4FEE\u590D\u5C06\u66F4\u65B0\u8FD9\u4E9B\u6587\u4EF6\u4E2D\u7684 HTML \u7ED3\u6784\uFF08\u4E3B\u8981\u662F data-note \u5C5E\u6027\u7684\u5B89\u5168\u8F6C\u4E49\uFF09\u3002\u5EFA\u8BAE\u5728\u6267\u884C\u524D\u5BF9 Vault \u8FDB\u884C\u5907\u4EFD\u3002",
+      cls: "mod-warning"
+    });
+    const btnContainer = contentEl.createDiv({ cls: "modal-button-container", attr: { style: "display: flex; justify-content: flex-end; gap: 10px;" } });
+    const cancelBtn = btnContainer.createEl("button", { text: "\u53D6\u6D88" });
+    cancelBtn.addEventListener("click", () => this.close());
+    const confirmBtn = btnContainer.createEl("button", { text: `\u786E\u8BA4\u4FEE\u590D (${this.filesToFix.length} \u4E2A\u6587\u4EF6)`, cls: "mod-cta" });
+    confirmBtn.addEventListener("click", () => {
+      this.close();
+      this.onConfirm();
+    });
+  }
+  onClose() {
+    this.contentEl.empty();
   }
 };
 var livePreviewAnnotationPlugin = import_view.ViewPlugin.fromClass(class {

@@ -1,3 +1,22 @@
+## v1.4.0 – Batch Fix Safety & Markdown Tables (Dec 10, 2025)
+
+### Feature 1: Batch Fix Confirmation Modal
+- **Summary**: Added a safety confirmation dialog for the "Normalize all Markdown files" command.
+- **Feature Details**: Scans the vault and prompts for confirmation with a file count before execution (simplified UI).
+
+### Feature 2: Markdown & Table Rendering in Tooltips
+- **Summary**: Tooltips now render full Markdown syntax, including **tables**.
+- **Problem Solved**: Annotations containing tables or complex formatting were previously unreadable.
+- **Technical Implementation**: 
+  - Switched to `MarkdownRenderer.render` with proper entity decoding.
+  - Added specific CSS for tables inside tooltips (borders, padding, background colors) to ensure readability.
+
+### Feature 3: UI & UX Refinements
+- **Theme Adaptive Colors**: Optimized highlight contrast for Dark and Light themes.
+- **Visuals**: Enlarged context menu icons (48x48) and centered them vertically.
+- **Layout**: Refined tooltip padding (`8px 10px`) and spacing.
+- **Bug Fixes**: Fixed an issue where the annotation modal input field was missing.
+
 ## v1.3.0 – Color Revolution & UX Renewal (Dec 10, 2025)
 
 ### Feature 1: New Color System & Visual Interaction

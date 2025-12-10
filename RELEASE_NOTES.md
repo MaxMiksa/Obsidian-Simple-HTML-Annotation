@@ -1,3 +1,27 @@
+## v1.4.0 – Batch Fix Safety & Markdown Tables / 批量修复保护与 Markdown 表格支持 (2025年12月10日)
+
+## ✨ 批量修复保护与 Markdown 表格
+
+**更安全的维护工具，更丰富的阅读体验（支持表格！）。**
+
+| 类别 | 详细内容 |
+| :--- | :--- |
+| **🛡️ 批量修复保护** | 执行“修复所有 Markdown 文件”命令时新增确认弹窗，防止意外误操作。 |
+| **📊 Markdown 表格** | 悬浮批注（Tooltip）现在完美支持 **Markdown 表格** 及其他富文本格式，样式精美，阅读体验大幅提升。 |
+| **🎨 细节优化** | 右键菜单图标放大更清晰；针对深色/浅色模式优化了高亮对比度；Tooltip 布局更紧凑。 |
+
+## ✨ Batch Fix Safety & Markdown Tables
+
+**Safer maintenance tools and richer reading experience (Tables supported!).**
+
+| Category | Details |
+| :--- | :--- |
+| **🛡️ Batch Fix Safety** | Added a confirmation dialog before running "Normalize all Markdown files" to prevent accidental bulk changes. |
+| **📊 Markdown Tables** | Tooltips now perfectly render **Markdown Tables** and other rich text formats with polished styling. |
+| **🎨 Visual Polish** | Larger and clearer context menu icons; optimized highlight contrast for themes; compacted tooltip layout. |
+
+---
+
 ## v1.3.0 – Color Revolution & UX Renewal / 色彩革命与交互焕新 (2025年12月10日)
 
 ## ✨ 全新 8 色系统与原生交互体验

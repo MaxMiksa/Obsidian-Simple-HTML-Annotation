@@ -1,4 +1,4 @@
-﻿import { App, Editor, MarkdownView, Modal, Plugin, Menu, Notice, addIcon } from 'obsidian';
+﻿import { App, Editor, MarkdownView, Modal, Plugin, Menu, Notice, addIcon, MarkdownRenderer, TFile } from 'obsidian';
 import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
@@ -83,8 +83,9 @@ export default class AnnotationPlugin extends Plugin {
 		// 0. 注册彩色圆点图标 (用于右键菜单)
 		COLOR_OPTIONS.forEach(opt => {
 			const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
-			// 使用实心圆，颜色硬编码，确保显示
-			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="${opt.hex}" /></svg>`;
+			// 使用实心圆，显式设置 fill/stroke，避免被主题的 fill:none 覆盖导致看不见
+			// Adjust cy to 25 per user request and allow overflow to fix clipping
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" viewBox="0 0 24 24" style="overflow: visible"><circle cx="12" cy="20" r="10" style="fill:${opt.hex};stroke:${opt.hex};stroke-width:1;" /></svg>`;
 			addIcon(iconId, svg);
 		});
 
@@ -411,7 +412,14 @@ export default class AnnotationPlugin extends Plugin {
 
 	showTooltip(evt: MouseEvent, text: string) {
 		if (!this.tooltipEl) return;
-		this.tooltipEl.innerText = text;
+		
+		this.tooltipEl.empty();
+		// 解码 text 中的 HTML 实体（如 &#10; -> \n），确保 Markdown 表格等语法能正确识别换行
+		const decodedText = decodeDataNote(text);
+		// 使用当前激活文件的路径作为 sourcePath，以支持相对路径链接等
+		const sourcePath = this.app.workspace.getActiveFile()?.path || "";
+		MarkdownRenderer.render(this.app, decodedText, this.tooltipEl, sourcePath, this);
+
 		this.tooltipEl.addClass('is-visible');
 		const x = evt.pageX;
 		const y = evt.pageY - 40;
@@ -451,23 +459,38 @@ export default class AnnotationPlugin extends Plugin {
 	 * 扫描并修复库内所有 Markdown 文件的批注 data-note
 	 */
 	private async normalizeAllMarkdownFiles() {
+		new Notice("开始扫描库文件，请稍候...");
 		const files = this.app.vault.getMarkdownFiles();
-		let fixedCount = 0;
+		const filesToFix: TFile[] = [];
 
+		// 1. 扫描阶段
 		for (const file of files) {
 			const original = await this.app.vault.read(file);
-			const { text, changed } = normalizeAnnotationsInText(original);
-			if (!changed) continue;
-
-			await this.app.vault.modify(file, text);
-			fixedCount++;
+			const { changed } = normalizeAnnotationsInText(original);
+			if (changed) {
+				filesToFix.push(file);
+			}
 		}
 
-		if (fixedCount === 0) {
+		if (filesToFix.length === 0) {
 			new Notice("未发现需要修复的批注");
-		} else {
-			new Notice(`已修复 ${fixedCount} 个 Markdown 文件的批注`);
+			return;
 		}
+
+		// 2. 确认阶段
+		new BatchFixConfirmModal(this.app, filesToFix, async () => {
+			let fixedCount = 0;
+			// 3. 执行阶段
+			for (const file of filesToFix) {
+				const original = await this.app.vault.read(file);
+				const { text, changed } = normalizeAnnotationsInText(original);
+				if (changed) {
+					await this.app.vault.modify(file, text);
+					fixedCount++;
+				}
+			}
+			new Notice(`已成功修复 ${fixedCount} 个 Markdown 文件的批注`);
+		}).open();
 	}
 }
 
@@ -596,6 +619,49 @@ class AnnotationModal extends Modal {
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
+	}
+}
+
+// --- 批量修复确认弹窗 ---
+class BatchFixConfirmModal extends Modal {
+	filesToFix: TFile[];
+	onConfirm: () => void;
+
+	constructor(app: App, filesToFix: TFile[], onConfirm: () => void) {
+		super(app);
+		this.filesToFix = filesToFix;
+		this.onConfirm = onConfirm;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl("h2", { text: "⚠️ 批量修复确认" });
+
+		contentEl.createEl("p", { 
+			text: `扫描发现共有 ${this.filesToFix.length} 个文件包含旧格式或需要规范化的批注。` 
+		});
+		
+		contentEl.createEl("p", { 
+			text: "执行修复将更新这些文件中的 HTML 结构（主要是 data-note 属性的安全转义）。建议在执行前对 Vault 进行备份。",
+			cls: "mod-warning"
+		});
+
+		// 移除了文件列表预览区域
+
+		const btnContainer = contentEl.createDiv({ cls: "modal-button-container", attr: { style: "display: flex; justify-content: flex-end; gap: 10px;" } });
+		
+		const cancelBtn = btnContainer.createEl("button", { text: "取消" });
+		cancelBtn.addEventListener("click", () => this.close());
+
+		const confirmBtn = btnContainer.createEl("button", { text: `确认修复 (${this.filesToFix.length} 个文件)`, cls: "mod-cta" });
+		confirmBtn.addEventListener("click", () => {
+			this.close();
+			this.onConfirm();
+		});
+	}
+
+	onClose() {
+		this.contentEl.empty();
 	}
 }
 

@@ -16,7 +16,17 @@
     padding: 0 2px;
 }
 
-.theme-light .ob-comment { --highlight-bg-alpha: 0.2; } /* 浅色模式稍微加深背景 */
+/* 浅色模式优化 */
+.theme-light .ob-comment { 
+    --highlight-bg-alpha: 0.2; 
+    --highlight-bg-hover-alpha: 0.40;
+}
+
+/* 深色模式优化 - 增加不透明度以提高对比度 */
+.theme-dark .ob-comment { 
+    --highlight-bg-alpha: 0.25; 
+    --highlight-bg-hover-alpha: 0.45;
+}
 
 .ob-comment:hover {
     background-color: rgba(255, 153, 0, var(--highlight-bg-hover-alpha));
@@ -57,8 +67,11 @@ body .ob-annotation-tooltip {
     border: 1px solid var(--modifier-border);
     box-shadow: var(--shadow-l);
     
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: 6px;
+    
+    /* Ensure markdown content (like tables) wraps and displays correctly */
+    white-space: normal;
     
     /* 字体大小：介于 small 和 medium 之间 */
     font-size: calc((var(--font-ui-small) + var(--font-ui-medium)) / 2);
@@ -78,6 +91,38 @@ body .ob-annotation-tooltip {
 body .ob-annotation-tooltip.is-visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Reset margins for Markdown rendered content inside tooltip */
+body .ob-annotation-tooltip p {
+    margin: 0;
+}
+
+
+/* ==========================================================================
+   7. 表格样式支持 (Table Support in Tooltip)
+   ========================================================================== */
+body .ob-annotation-tooltip table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin: 8px 0;
+    width: max-content;
+    max-width: 100%;
+}
+
+body .ob-annotation-tooltip th,
+body .ob-annotation-tooltip td {
+    padding: 4px 10px;
+    border: 1px solid var(--background-modifier-border);
+}
+
+body .ob-annotation-tooltip th {
+    background-color: var(--background-secondary);
+    font-weight: 600;
+}
+
+body .ob-annotation-tooltip tr:nth-child(even) {
+    background-color: var(--background-primary-alt);
 }
 
 
