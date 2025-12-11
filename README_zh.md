@@ -87,7 +87,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
 *   开发一个侧边栏面板，列出当前文档中**所有批注**。
 *   点击侧边栏的某条批注，编辑器自动滚动跳转到对应位置（类似 Word 的审阅窗格）。
 
-- [x] 4. 多彩批注
+- [x] 4. 多彩批注 (2025-11-20完成)
 *   允许用户在弹窗中选择不同的批注颜色（如：红色代表疑问，绿色代表想法，黄色代表待办）。
 *   实现方式：在 HTML 中添加不同的 class，如 `class=\"ob-comment red\"`。
 
