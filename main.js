@@ -510,6 +510,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
+    let iconTriggerSetting = null;
     containerEl.createEl("h2", { text: "\u57FA\u7840\u8BBE\u7F6E (General Settings)" });
     new import_obsidian.Setting(containerEl).setName("\u9ED8\u8BA4\u6279\u6CE8\u989C\u8272").setDesc("\u51B3\u5B9A\u65B0\u5EFA\u6279\u6CE8\u65F6\u7684\u521D\u59CB\u9009\u4E2D\u989C\u8272\u3002").addDropdown((dropdown) => {
       COLOR_OPTIONS.forEach((opt) => {
@@ -540,9 +541,12 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName("\u663E\u793A\u6587\u672B\u56FE\u6807").setDesc("\u5728\u6279\u6CE8\u6587\u672C\u672B\u5C3E\u8FFD\u52A0\u4E00\u4E2A\u5C0F\u7684\u201C\u{1F4DD}\u201D\u56FE\u6807 (\u4F2A\u5143\u7D20)\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableIcon).onChange(async (value) => {
       this.plugin.settings.enableIcon = value;
       this.plugin.updateStyles();
+      if (iconTriggerSetting) {
+        iconTriggerSetting.setDisabled(!value);
+      }
       await this.plugin.saveSettings();
     }));
-    new import_obsidian.Setting(containerEl).setName("\u6587\u672B\u56FE\u6807\u89E6\u53D1\u65B9\u5F0F").setDesc("\u4EC5\u5728\u201C\u4EC5\u56FE\u6807\u201D\u6A21\u5F0F\u4E0B\u751F\u6548\uFF1A\u9009\u62E9\u60AC\u6D6E\u56FE\u6807\u81EA\u52A8\u5F39\u51FA\uFF0C\u6216\u9700\u70B9\u51FB\u56FE\u6807\u540E\u624D\u663E\u793A\u6279\u6CE8\u3002").addDropdown((dropdown) => {
+    iconTriggerSetting = new import_obsidian.Setting(containerEl).setName("\u6587\u672B\u56FE\u6807\u89E6\u53D1\u65B9\u5F0F").setDesc("\u4EC5\u5728\u201C\u4EC5\u56FE\u6807\u201D\u6A21\u5F0F\u4E0B\u751F\u6548\uFF1A\u9009\u62E9\u60AC\u6D6E\u56FE\u6807\u81EA\u52A8\u5F39\u51FA\uFF0C\u6216\u9700\u70B9\u51FB\u56FE\u6807\u540E\u624D\u663E\u793A\u6279\u6CE8\u3002").addDropdown((dropdown) => {
       dropdown.addOption("hover", "\u79FB\u52A8\u5230\u56FE\u6807\u81EA\u52A8\u60AC\u6D6E");
       dropdown.addOption("click", "\u70B9\u51FB\u56FE\u6807\u540E\u518D\u60AC\u6D6E");
       dropdown.setValue(this.plugin.settings.iconTooltipTrigger).onChange(async (value) => {
