@@ -21,6 +21,9 @@ The plugin is called **Simple HTML Annotation**: It allows you to **automaticall
     *   Supports **Red, Orange, Yellow, Green, Cyan, Blue, Purple, Gray**.
     *   **Visual Picker**: Select colors via circular swatches in the modal (keyboard accessible).
     *   **Right-Click Preview**: Context menu shows real colored icons.
+*   **Markdown Support (New)**:
+    *   **Rich Text Rendering**: Tooltips perfectly render **Markdown Tables**, bold, italics, links, code blocks, etc.
+    *   **Nested Support**: Supports adding annotations containing tables inside table cells.
 *   **Mobile Support**: Click on annotated text on mobile devices to view the note.
 *   **Efficiency**:
     *   **Shortcuts**: Bind hotkeys to specific colors (e.g., "Add Red Annotation").
