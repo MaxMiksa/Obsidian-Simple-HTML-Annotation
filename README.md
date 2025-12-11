@@ -88,7 +88,7 @@ Alternatively, if you prefer not to use a shortcut:
 *   Allow users to select different annotation colors (e.g., Red for questions, Green for ideas, Yellow for tasks) directly in the popup.
 *   Implementation: Adds different classes to the HTML, such as `class="ob-comment red"`.
 
-- [ ] 5. Icon Mode
+- [ ] 5. Icon Mode (Completed 2025-11-20)
 *   Add a setting switch: choose between "Underline Mode" or "End-of-Text Icon Mode."
 *   In Icon Mode, use CSS `::after` pseudo-element to place a symbol like `📝` after the text; the annotation content displays when hovering over the icon.
 
