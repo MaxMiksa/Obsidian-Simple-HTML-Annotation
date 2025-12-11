@@ -7,8 +7,8 @@
 | 类别 | 详细内容 |
 | :--- | :--- |
 | **🛡️ 批量修复保护** | 执行“修复所有 Markdown 文件”命令时新增确认弹窗，防止意外误操作。 |
-| **📊 Markdown 表格** | 悬浮批注（Tooltip）现在完美支持 **Markdown 表格** 及其他富文本格式，样式精美，阅读体验大幅提升。 |
-| **🎨 细节优化** | 右键菜单图标放大更清晰；针对深色/浅色模式优化了高亮对比度；Tooltip 布局更紧凑。 |
+| **📊 Markdown 表格** | 悬浮批注（Tooltip）现在完美支持 **Markdown 表格** 及其他富文本格式。即使在表格单元格内，也能安全嵌套包含表格的批注。 |
+| **🎨 细节优化** | 右键菜单图标放大；Tooltip 布局更紧凑；编辑弹窗支持自动高度调节；主题适配优化。 |
 
 ## ✨ Batch Fix Safety & Markdown Tables
 
@@ -17,8 +17,8 @@
 | Category | Details |
 | :--- | :--- |
 | **🛡️ Batch Fix Safety** | Added a confirmation dialog before running "Normalize all Markdown files" to prevent accidental bulk changes. |
-| **📊 Markdown Tables** | Tooltips now perfectly render **Markdown Tables** and other rich text formats with polished styling. |
-| **🎨 Visual Polish** | Larger and clearer context menu icons; optimized highlight contrast for themes; compacted tooltip layout. |
+| **📊 Markdown Tables** | Tooltips now perfectly render **Markdown Tables**. Supports nested tables (tables inside annotations inside tables). |
+| **🎨 Visual Polish** | Larger context menu icons; auto-resizing input modal; optimized highlight contrast; compacted tooltip layout. |
 
 ---
 

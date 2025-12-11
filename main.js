@@ -47,10 +47,10 @@ function buildAnnotationClass(color) {
   return color ? "ob-comment " + color : "ob-comment";
 }
 function escapeDataNote(note) {
-  return note.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/`/g, "&#96;").replace(/\r?\n/g, "&#10;");
+  return note.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/`/g, "&#96;").replace(/\|/g, "&#124;").replace(/\r?\n/g, "&#10;");
 }
 function decodeDataNote(note) {
-  return note.replace(/&#10;/g, "\n").replace(/&#13;/g, "\r").replace(/&#96;/g, "`").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+  return note.replace(/&#10;/g, "\n").replace(/&#13;/g, "\r").replace(/&#96;/g, "`").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&#124;/g, "|").replace(/&amp;/g, "&");
 }
 function normalizeAnnotationsInText(text) {
   COMMENT_REGEX.lastIndex = 0;
@@ -409,8 +409,14 @@ var AnnotationModal = class extends import_obsidian.Modal {
       cls: "annotation-input",
       attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" }
     });
+    const adjustHeight = () => {
+      inputEl.style.height = "auto";
+      inputEl.style.height = inputEl.scrollHeight + "px";
+    };
+    inputEl.addEventListener("input", adjustHeight);
     inputEl.value = this.defaultValue;
     setTimeout(() => {
+      adjustHeight();
       inputEl.focus();
       if (this.defaultValue) inputEl.select();
     }, 0);

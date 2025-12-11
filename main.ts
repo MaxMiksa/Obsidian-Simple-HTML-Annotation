@@ -33,6 +33,7 @@ function escapeDataNote(note: string): string {
 		.replace(/>/g, "&gt;")
 		.replace(/'/g, "&#39;")
 		.replace(/`/g, "&#96;")
+		.replace(/\|/g, "&#124;") // 转义竖线，防止破坏外层表格结构
 		.replace(/\r?\n/g, "&#10;");
 }
 
@@ -46,6 +47,7 @@ function decodeDataNote(note: string): string {
 		.replace(/&quot;/g, "\"")
 		.replace(/&gt;/g, ">")
 		.replace(/&lt;/g, "<")
+		.replace(/&#124;/g, "|")
 		.replace(/&amp;/g, "&");
 }
 
@@ -521,10 +523,18 @@ class AnnotationModal extends Modal {
 			attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" } 
 		});
 		
+		// Auto-resize logic
+		const adjustHeight = () => {
+			inputEl.style.height = 'auto';
+			inputEl.style.height = inputEl.scrollHeight + 'px';
+		};
+		inputEl.addEventListener('input', adjustHeight);
+
 		// 填入默认值
 		inputEl.value = this.defaultValue;
 		// 稍微延迟聚焦，确保 UI 渲染完成
 		setTimeout(() => {
+			adjustHeight(); // Initial adjustment
 			inputEl.focus();
 			// 如果是编辑模式，全选文本方便修改
 			if (this.defaultValue) inputEl.select();

@@ -183,10 +183,10 @@ body .ob-annotation-tooltip tr:nth-child(even) {
    5. 弹窗 UI 增强 (Modal UI Enhancements)
    ========================================================================== */
 
-/* 1. 放宽弹窗宽度 */
+/* 1. 放宽弹窗宽度 (Adjusted per user request: 80% of previous size) */
 .ob-annotation-modal-container {
-    width: 800px !important; 
-    max-width: 90vw !important;
+    width: 640px !important; 
+    max-width: 80vw !important;
 }
 
 /* 2. 输入框美化 */
@@ -201,7 +201,8 @@ body .ob-annotation-tooltip tr:nth-child(even) {
     font-size: var(--font-ui-medium); 
     line-height: 1.5;
     transition: all 0.2s ease;
-    resize: vertical;
+    resize: none; /* Disable manual resize since we use auto-resize */
+    overflow-y: hidden; /* Hide scrollbar for auto-resize */
 }
 
 .annotation-input:focus {
