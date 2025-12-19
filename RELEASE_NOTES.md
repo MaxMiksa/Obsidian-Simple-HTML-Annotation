@@ -1,3 +1,23 @@
+## v1.6.0 – Rebrand & Bilingual UI / 更名与双语界面 (2025 年12月19日)
+
+## ✨ 更名与双语体验
+**插件更名为 Hover Annotations，新增语言切换与优化的批注弹窗。**
+| 类别 | 详细内容 |
+| :--- | :--- |
+| **品牌/ID** | 更名并更换插件 ID 为 `hover-annotations`；升级时建议移除旧目录 `simple-html-annotation` 后重新安装。 |
+| **双语界面** | 设置新增语言切换；命令、提示、右键菜单即时切换中/英，默认英文。 |
+| **弹窗体验** | 新增标题+快捷键提示，颜色选择与按钮同列展示，键盘选色状态更清晰。 |
+
+## ✨ Rebrand & Bilingual Experience
+**New Hover Annotations brand, language toggle, and a refined annotation modal.**
+| Category | Details |
+| :--- | :--- |
+| **Brand/ID** | Renamed with plugin ID `hover-annotations`; for upgrades, remove the old `simple-html-annotation` folder before reinstalling. |
+| **Bilingual UI** | Language switch in settings; commands, notices, and context menus swap between EN/ZH instantly (default EN). |
+| **Modal UX** | Added header with key hints, inline layout for colors + buttons, clearer active state for keyboard selection. |
+
+---
+
 ## v1.5.0 – New Settings Panel & Customization / 全新设置面板与个性化定制 (2025年12月11日)
 
 ## ✨ 全新设置面板与极简图标模式

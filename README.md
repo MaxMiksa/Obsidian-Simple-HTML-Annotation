@@ -1,7 +1,7 @@
-# Obsidian-Simple-HTML-Annotation | [中文](README_zh.md)
+# Obsidian-Hover-Annotations | [中文](README_zh.md)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg) ![Obsidian API](https://img.shields.io/badge/Obsidian-API-4B3CFA.svg) ![Build: esbuild](https://img.shields.io/badge/build-esbuild-FFCF00.svg)
 
-The plugin is called **Simple HTML Annotation**: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian**. At the same time, it maintains the plain text compatibility and secure local storage of Markdown files.
+The plugin is called **Hover Annotations**: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian**. At the same time, it maintains the plain text compatibility and secure local storage of Markdown files.
 
 ***
 ### ✨ Feature Overview
@@ -57,7 +57,7 @@ The plugin is called **Simple HTML Annotation**: It allows you to **automaticall
 
 Alternatively, if you prefer not to use a shortcut:
 1.  Select the text, then open the Command Palette (usually `Ctrl/Cmd + P`).
-2.  Search for `HTML` or `Annotation` and select the command **“Simple HTML Annotation: Add Annotation (HTML)”** and press Enter.
+2.  Search for `HTML` or `Annotation` and select the command **“Hover Annotations: Add Annotation (HTML)”** and press Enter.
 3.  Write your annotation and confirm.
 
 **Step 2: Viewing Annotations**
@@ -84,11 +84,11 @@ Alternatively, if you prefer not to use a shortcut:
 *   Develop a sidebar panel that lists **all annotations** in the current document.
 *   Clicking an annotation in the sidebar automatically scrolls the editor to the corresponding location (similar to the Review pane in Word).
 
-- [x] 4. Multi-Color Annotations
+- [x] 4. Multi-Color Annotations (Completed 2025-11-20)
 *   Allow users to select different annotation colors (e.g., Red for questions, Green for ideas, Yellow for tasks) directly in the popup.
 *   Implementation: Adds different classes to the HTML, such as `class="ob-comment red"`.
 
-- [ ] 5. Icon Mode (Completed 2025-11-20)
+- [x] 5. Icon Mode (Completed 2025-11-20)
 *   Add a setting switch: choose between "Underline Mode" or "End-of-Text Icon Mode."
 *   In Icon Mode, use CSS `::after` pseudo-element to place a symbol like `📝` after the text; the annotation content displays when hovering over the icon.
 

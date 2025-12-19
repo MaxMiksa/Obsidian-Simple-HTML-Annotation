@@ -275,6 +275,26 @@ body .ob-annotation-tooltip tr:nth-child(even) {
     max-width: 80vw !important;
 }
 
+.annotation-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.annotation-header-row h2 {
+    margin: 0;
+}
+
+.annotation-color-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 /* 2. 输入框美化 */
 .annotation-input {
     background-color: var(--background-modifier-form-field);
@@ -297,8 +317,22 @@ body .ob-annotation-tooltip tr:nth-child(even) {
     outline: none;
 }
 
+.annotation-key-hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    text-align: right;
+}
+
 .modal-button-container {
     margin-top: 20px;
+}
+
+.modal-button-container.inline {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 0;
 }
 
 /* ==========================================================================

@@ -1,9 +1,9 @@
-﻿# Obsidian-Simple-HTML-Annotation | [English Doc](README.md)
+﻿# Obsidian-Hover-Annotations | [English Doc](README.md)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg) ![Obsidian API](https://img.shields.io/badge/Obsidian-API-4B3CFA.svg) ![Build: esbuild](https://img.shields.io/badge/build-esbuild-FFCF00.svg)
 
-这款插件名为 **Simple HTML Annotation**（极简 HTML 批注）：在 Obsidian 中可以**插入后自动隐藏批注内容，鼠标悬停时立即展示批注内容**，同时保持 Markdown 文件的纯文本兼容与本地存储安全。
+这款插件名为 **Hover Annotations**（悬停批注）：在 Obsidian 中可以**插入后自动隐藏批注内容，鼠标悬停时立即展示批注内容**，同时保持 Markdown 文件的纯文本兼容与本地存储安全。
 
-The plugin is called Simple HTML Annotation: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian** while keeping plain-text compatibility and safe local storage.
+The plugin is called Hover Annotations: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian** while keeping plain-text compatibility and safe local storage.
 
 ---
 
@@ -60,7 +60,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
 
 如果不想用快捷键，可以使用命令面板：
 1.  选中文本，按下命令面板快捷键（通常是 `Ctrl/Cmd + P`）。
-2.  输入 `HTML` 或 `Annotation` 搜索，找到命令 **“Simple HTML Annotation: 添加批注 (HTML)”** 并回车。
+2.  输入 `HTML` 或 `Annotation` 搜索，找到命令 **“Hover Annotations: 添加批注 (HTML)”** 并回车。
 3.  在弹出的输入框中写下批注，回车或点击“确定”。
 
 **第二步：查看批注**
@@ -91,7 +91,7 @@ The plugin is called Simple HTML Annotation: It allows you to **automatically hi
 *   允许用户在弹窗中选择不同的批注颜色（如：红色代表疑问，绿色代表想法，黄色代表待办）。
 *   实现方式：在 HTML 中添加不同的 class，如 `class=\"ob-comment red\"`。
 
-- [ ] 5. 图标模式
+- [x] 5. 图标模式 (2025-11-20完成)
 *   在设置里增加一个开关：选择“下划线模式”还是“文末图标模式”。
 *   图标模式下，使用 CSS `::after` 伪元素在文本后加一个 `📝` 符号，鼠标悬浮在图标上显示内容。
 

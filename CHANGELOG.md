@@ -1,3 +1,23 @@
+## v1.6.0 – Rebrand & Bilingual UI (2025-12-19)
+
+### Feature 1: New Name & Plugin ID
+- **Summary**: Rebranded to **Hover Annotations** with a new plugin ID (`hover-annotations`).
+- **Problem Solved**: Old name/ID no longer reflected the product focus and caused prefix mismatches.
+- **Feature Details**: Manifest, package name, and README now use the new brand; command prefixes align with the new ID.
+- **Technical Implementation**: Updated `manifest.json`, package metadata, and code references that derive command IDs from the manifest.
+
+### Feature 2: Bilingual Interface & Commands
+- **Summary**: Added full English/Simplified Chinese localization with a language toggle in settings.
+- **Problem Solved**: English users previously saw untranslated Chinese strings in commands, notices, and menus.
+- **Feature Details**: Settings, notices, tooltips, context menus, and command labels switch instantly when changing language; defaults to English.
+- **Technical Implementation**: Centralized `STRINGS` map, stored `language` setting, and dynamic command name updates.
+
+### Feature 3: Annotation Modal UX Polish
+- **Summary**: Refined the add/edit modal for clarity and keyboard use.
+- **Problem Solved**: Keyboard shortcuts and color selection hints were hidden; action buttons were detached from the color chooser.
+- **Feature Details**: Added header with key hints, inline layout for color picker + buttons, clearer active state and labels.
+- **Technical Implementation**: New modal structure with flex rows and supporting CSS (`annotation-header-row`, `annotation-color-row`, inline button container).
+
 ## v1.5.0 – New Settings Panel & Customization (2025-12-11)
 
 ### Feature 1: Comprehensive Appearance Settings

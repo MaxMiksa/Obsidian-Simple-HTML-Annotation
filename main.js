@@ -31,18 +31,204 @@ var import_obsidian = require("obsidian");
 var import_view = require("@codemirror/view");
 var import_state = require("@codemirror/state");
 var COMMENT_REGEX = /<span class="ob-comment(?:\s+([\w-]+))?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
-var COLOR_OPTIONS = [
-  { value: "red", label: "\u7EA2\u8272", hex: "#e5484d" },
-  { value: "", label: "\u6A59\u8272 (\u9ED8\u8BA4)", hex: "#ff9900" },
-  // Orange is default (empty class)
-  { value: "yellow", label: "\u9EC4\u8272", hex: "#e6c229" },
-  { value: "green", label: "\u7EFF\u8272", hex: "#2f9d62" },
-  { value: "cyan", label: "\u9752\u8272", hex: "#1abc9c" },
-  { value: "blue", label: "\u84DD\u8272", hex: "#3498db" },
-  { value: "purple", label: "\u7D2B\u8272", hex: "#9b59b6" },
-  { value: "gray", label: "\u7070\u8272", hex: "#95a5a6" }
-];
 var DEFAULT_COLOR = "";
+var STRINGS = {
+  en: {
+    settingLanguageName: "Language",
+    settingLanguageDesc: "Choose plugin UI language (default: English).",
+    settingLanguageEn: "English",
+    settingLanguageZh: "Simplified Chinese",
+    colorRed: "Red",
+    colorDefault: "Orange (default)",
+    colorYellow: "Yellow",
+    colorGreen: "Green",
+    colorCyan: "Cyan",
+    colorBlue: "Blue",
+    colorPurple: "Purple",
+    colorGray: "Gray",
+    cmdAddDefault: "Add Annotation (Default)",
+    cmdAddWithColor: (color) => `Add Annotation (${color})`,
+    cmdToggleVisibility: "Show/Hide Annotation Styles",
+    cmdEditCurrent: "Edit Current Annotation",
+    cmdDeleteCurrent: "Delete Current Annotation",
+    cmdNormalizeCurrent: "Fix Current File Annotation data-note",
+    cmdNormalizeVault: "Fix All Markdown Annotation data-note",
+    noticeHidden: "Annotation styles are now hidden",
+    noticeShown: "Annotation styles are now visible",
+    noticeNoAnnotation: "No annotation at cursor",
+    noticeNeedSelection: "Please select some text first",
+    noticeNoNested: "Nested annotations are not supported; remove the old one first",
+    noticeNoFixNeeded: "No annotations need fixing",
+    noticeFixedCurrent: "Annotations in this file are now safe-formatted",
+    noticeScanStart: "Scanning vault, please wait...",
+    noticeFixedVault: (count) => `Successfully fixed annotations in ${count} Markdown file(s)`,
+    noticeNeedSelectionAdd: "Please select text to add a new annotation",
+    noticeCopied: "Annotations copied to clipboard!",
+    noticeOpenDoc: "Please open a Markdown document first",
+    ctxAdd: "Add Annotation",
+    ctxEdit: "Edit Annotation",
+    ctxChangeColor: " - Change Color",
+    ctxDelete: "Delete Annotation",
+    modalTitleEdit: "Edit Annotation",
+    modalTitleNew: "Enter Annotation Content",
+    modalColorLabel: "Annotation Color",
+    modalKeyHint: "Enter: submit annotation; Shift+Enter: newline",
+    modalCancel: "Cancel",
+    modalConfirm: "Confirm",
+    modalColorCurrent: "Current color: ",
+    batchTitle: "\u26A0\uFE0F Batch Fix Confirmation",
+    batchSummary: (count) => `Found ${count} file(s) with legacy or unsafe annotations.`,
+    batchWarning: "Fixing will update HTML (data-note escaping). Please backup your vault first.",
+    batchConfirm: (count) => `Confirm fix (${count} files)`,
+    batchCancel: "Cancel",
+    settingsGeneral: "General Settings",
+    settingsAppearance: "Appearance",
+    settingsInteraction: "Interaction",
+    settingsAdvanced: "Advanced & Maintenance",
+    settingDefaultColorName: "Default annotation color",
+    settingDefaultColorDesc: "Initial color when creating a new annotation.",
+    settingHideDefaultName: "Hide annotations by default",
+    settingHideDefaultDesc: "On app launch, hide all annotation styling for a clean reading mode.",
+    settingUnderlineName: "Show underline",
+    settingUnderlineDesc: "Add a colored underline to annotated text.",
+    settingBackgroundName: "Show background highlight",
+    settingBackgroundDesc: "Add a translucent background highlight to annotated text.",
+    settingIconName: "Show end icon",
+    settingIconDesc: 'Append a small "\u{1F4DD}" icon (pseudo-element) to annotated text.',
+    settingIconTriggerName: "End icon trigger",
+    settingIconTriggerDesc: "Only in icon-only mode: show tooltip on hover, or require click first.",
+    settingIconHover: "Hover to show",
+    settingIconClick: "Click to show",
+    settingLightOpacityName: "Light theme opacity",
+    settingLightOpacityDesc: "Adjust highlight depth for Light themes (0% - 100%).",
+    settingDarkOpacityName: "Dark theme opacity",
+    settingDarkOpacityDesc: "Adjust highlight depth for Dark themes (0% - 100%).",
+    settingTooltipWidthName: "Tooltip max width",
+    settingTooltipWidthDesc: "Limit tooltip width (px).",
+    settingFontAdjustName: "Adjust font size",
+    settingFontAdjustDescPrefix: "Adjust annotation font by steps (max \xB13). Current: ",
+    settingFontStepDefault: "Default",
+    settingFontStep: (step) => `${step > 0 ? "+" : ""}${step} step`,
+    settingFontStepPlural: (step) => `${step > 0 ? "+" : ""}${step} steps`,
+    settingFontSmaller: "Smaller",
+    settingFontLarger: "Larger",
+    settingMarkdownName: "Enable Markdown rendering",
+    settingMarkdownDesc: "Render annotation content as Markdown. Off = show plain text.",
+    settingFixDataName: "One-click repair",
+    settingFixDataDesc: "Scan all files and fix legacy annotation format issues.",
+    settingFixDataButton: "Start scan & fix",
+    settingExportName: "Export annotations (current file)",
+    settingExportDesc: "Extract all annotations from the current document to clipboard.",
+    settingExportButton: "Copy to clipboard",
+    exportHeading: "## Annotations Export\n\n",
+    exportOriginal: "Original",
+    exportAnnotation: "Annotation",
+    menuAddTitle: "Add Annotation"
+  },
+  zh: {
+    settingLanguageName: "\u8BED\u8A00",
+    settingLanguageDesc: "\u9009\u62E9\u63D2\u4EF6\u754C\u9762\u8BED\u8A00\uFF08\u9ED8\u8BA4\uFF1A\u82F1\u6587\uFF09\u3002",
+    settingLanguageEn: "\u82F1\u8BED",
+    settingLanguageZh: "\u7B80\u4F53\u4E2D\u6587",
+    colorRed: "\u7EA2\u8272",
+    colorDefault: "\u6A59\u8272\uFF08\u9ED8\u8BA4\uFF09",
+    colorYellow: "\u9EC4\u8272",
+    colorGreen: "\u7EFF\u8272",
+    colorCyan: "\u9752\u8272",
+    colorBlue: "\u84DD\u8272",
+    colorPurple: "\u7D2B\u8272",
+    colorGray: "\u7070\u8272",
+    cmdAddDefault: "\u6DFB\u52A0\u6279\u6CE8\uFF08\u9ED8\u8BA4\uFF09",
+    cmdAddWithColor: (color) => `\u6DFB\u52A0\u6279\u6CE8\uFF08${color}\uFF09`,
+    cmdToggleVisibility: "\u663E\u793A/\u9690\u85CF\u6279\u6CE8\u6837\u5F0F",
+    cmdEditCurrent: "\u7F16\u8F91\u5F53\u524D\u6279\u6CE8",
+    cmdDeleteCurrent: "\u5220\u9664\u5F53\u524D\u6279\u6CE8",
+    cmdNormalizeCurrent: "\u4FEE\u590D\u5F53\u524D\u6587\u4EF6\u7684\u6279\u6CE8 data-note",
+    cmdNormalizeVault: "\u4FEE\u590D\u6240\u6709 Markdown \u6587\u4EF6\u7684\u6279\u6CE8 data-note",
+    noticeHidden: "\u6279\u6CE8\u6837\u5F0F\u5DF2\u9690\u85CF",
+    noticeShown: "\u6279\u6CE8\u6837\u5F0F\u5DF2\u663E\u793A",
+    noticeNoAnnotation: "\u5149\u6807\u5904\u6CA1\u6709\u6279\u6CE8",
+    noticeNeedSelection: "\u8BF7\u5148\u9009\u62E9\u4E00\u6BB5\u6587\u672C",
+    noticeNoNested: "\u4E0D\u652F\u6301\u5728\u5DF2\u6709\u6279\u6CE8\u4E0A\u5D4C\u5957\u6279\u6CE8\uFF0C\u8BF7\u5148\u5220\u9664\u65E7\u6279\u6CE8",
+    noticeNoFixNeeded: "\u672A\u53D1\u73B0\u9700\u8981\u4FEE\u590D\u7684\u6279\u6CE8",
+    noticeFixedCurrent: "\u5F53\u524D\u6587\u4EF6\u7684\u6279\u6CE8\u5DF2\u8F6C\u6362\u4E3A\u5B89\u5168\u683C\u5F0F",
+    noticeScanStart: "\u5F00\u59CB\u626B\u63CF\u5E93\u6587\u4EF6\uFF0C\u8BF7\u7A0D\u5019...",
+    noticeFixedVault: (count) => `\u5DF2\u6210\u529F\u4FEE\u590D ${count} \u4E2A Markdown \u6587\u4EF6\u7684\u6279\u6CE8`,
+    noticeNeedSelectionAdd: "\u8BF7\u5148\u9009\u62E9\u6587\u672C\u4EE5\u6DFB\u52A0\u65B0\u6279\u6CE8",
+    noticeCopied: "\u6279\u6CE8\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F\uFF01",
+    noticeOpenDoc: "\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u6863",
+    ctxAdd: "\u6DFB\u52A0\u6279\u6CE8",
+    ctxEdit: "\u7F16\u8F91\u6279\u6CE8",
+    ctxChangeColor: " - \u4FEE\u6539\u989C\u8272",
+    ctxDelete: "\u5220\u9664\u6279\u6CE8",
+    modalTitleEdit: "\u7F16\u8F91\u6279\u6CE8",
+    modalTitleNew: "\u8F93\u5165\u6279\u6CE8\u5185\u5BB9",
+    modalColorLabel: "\u6279\u6CE8\u989C\u8272",
+    modalKeyHint: "Enter\uFF1A\u5B8C\u6210\u6279\u6CE8\uFF1BShift+Enter\uFF1A\u6362\u884C",
+    modalCancel: "\u53D6\u6D88",
+    modalConfirm: "\u786E\u5B9A",
+    modalColorCurrent: "\u5F53\u524D\u989C\u8272\uFF1A",
+    batchTitle: "\u26A0\uFE0F \u6279\u91CF\u4FEE\u590D\u786E\u8BA4",
+    batchSummary: (count) => `\u626B\u63CF\u53D1\u73B0\u5171\u6709 ${count} \u4E2A\u6587\u4EF6\u5305\u542B\u65E7\u683C\u5F0F\u6216\u9700\u8981\u89C4\u8303\u5316\u7684\u6279\u6CE8\u3002`,
+    batchWarning: "\u6267\u884C\u4FEE\u590D\u5C06\u66F4\u65B0\u8FD9\u4E9B\u6587\u4EF6\u4E2D\u7684 HTML \u7ED3\u6784\uFF08\u4E3B\u8981\u662F data-note \u7684\u5B89\u5168\u8F6C\u4E49\uFF09\u3002\u5EFA\u8BAE\u5148\u5907\u4EFD Vault\u3002",
+    batchConfirm: (count) => `\u786E\u8BA4\u4FEE\u590D\uFF08${count} \u4E2A\u6587\u4EF6\uFF09`,
+    batchCancel: "\u53D6\u6D88",
+    settingsGeneral: "\u57FA\u7840\u8BBE\u7F6E",
+    settingsAppearance: "\u5916\u89C2\u6837\u5F0F",
+    settingsInteraction: "\u4EA4\u4E92\u4F53\u9A8C",
+    settingsAdvanced: "\u9AD8\u7EA7\u4E0E\u7EF4\u62A4",
+    settingDefaultColorName: "\u9ED8\u8BA4\u6279\u6CE8\u989C\u8272",
+    settingDefaultColorDesc: "\u65B0\u5EFA\u6279\u6CE8\u65F6\u7684\u521D\u59CB\u9009\u4E2D\u989C\u8272\u3002",
+    settingHideDefaultName: "\u9ED8\u8BA4\u9690\u85CF\u6279\u6CE8",
+    settingHideDefaultDesc: "Obsidian \u542F\u52A8\u65F6\u81EA\u52A8\u9690\u85CF\u6240\u6709\u6279\u6CE8\u6837\u5F0F\uFF08\u7EAF\u51C0\u9605\u8BFB\u6A21\u5F0F\uFF09\u3002",
+    settingUnderlineName: "\u663E\u793A\u4E0B\u5212\u7EBF",
+    settingUnderlineDesc: "\u4E3A\u6279\u6CE8\u6587\u672C\u6DFB\u52A0\u5E95\u90E8\u5F69\u8272\u4E0B\u5212\u7EBF\u3002",
+    settingBackgroundName: "\u663E\u793A\u80CC\u666F\u8272",
+    settingBackgroundDesc: "\u4E3A\u6279\u6CE8\u6587\u672C\u6DFB\u52A0\u534A\u900F\u660E\u80CC\u666F\u9AD8\u4EAE\u3002",
+    settingIconName: "\u663E\u793A\u6587\u672B\u56FE\u6807",
+    settingIconDesc: "\u5728\u6279\u6CE8\u6587\u672C\u672B\u5C3E\u8FFD\u52A0\u4E00\u4E2A\u5C0F\u7684\u201C\u{1F4DD}\u201D\u56FE\u6807\uFF08\u4F2A\u5143\u7D20\uFF09\u3002",
+    settingIconTriggerName: "\u6587\u672B\u56FE\u6807\u89E6\u53D1\u65B9\u5F0F",
+    settingIconTriggerDesc: "\u4EC5\u5728\u201C\u4EC5\u56FE\u6807\u201D\u6A21\u5F0F\u4E0B\u751F\u6548\uFF1A\u60AC\u6D6E\u81EA\u52A8\u663E\u793A\u6216\u9700\u70B9\u51FB\u540E\u663E\u793A\u6279\u6CE8\u3002",
+    settingIconHover: "\u79FB\u52A8\u5230\u56FE\u6807\u81EA\u52A8\u60AC\u6D6E",
+    settingIconClick: "\u70B9\u51FB\u56FE\u6807\u540E\u518D\u60AC\u6D6E",
+    settingLightOpacityName: "\u6D45\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6",
+    settingLightOpacityDesc: "\u8C03\u6574 Light \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
+    settingDarkOpacityName: "\u6DF1\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6",
+    settingDarkOpacityDesc: "\u8C03\u6574 Dark \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
+    settingTooltipWidthName: "Tooltip \u6700\u5927\u5BBD\u5EA6",
+    settingTooltipWidthDesc: "\u9650\u5236\u60AC\u6D6E\u6C14\u6CE1\u7684\u6700\u5927\u5BBD\u5EA6 (px)\u3002",
+    settingFontAdjustName: "\u8C03\u8282\u5B57\u4F53\u5927\u5C0F",
+    settingFontAdjustDescPrefix: "\u6279\u6CE8\u5185\u5BB9\u5B57\u4F53\u6309\u6863\u4F4D\u8C03\u6574\uFF08\u6700\u591A \xB13 \u6863\uFF09\u3002 \u5F53\u524D\uFF1A",
+    settingFontStepDefault: "\u9ED8\u8BA4",
+    settingFontStep: (step) => `${step > 0 ? "+" : ""}${step} \u6863`,
+    settingFontStepPlural: (step) => `${step > 0 ? "+" : ""}${step} \u6863`,
+    settingFontSmaller: "\u51CF\u5C0F\u4E00\u53F7",
+    settingFontLarger: "\u52A0\u5927\u4E00\u53F7",
+    settingMarkdownName: "\u542F\u7528 Markdown \u6E32\u67D3",
+    settingMarkdownDesc: "\u5F00\u542F\u540E\uFF0C\u6279\u6CE8\u5185\u5BB9\u652F\u6301 Markdown\uFF1B\u5173\u95ED\u5219\u663E\u793A\u7EAF\u6587\u672C\u3002",
+    settingFixDataName: "\u4E00\u952E\u4FEE\u590D\u6570\u636E",
+    settingFixDataDesc: "\u626B\u63CF\u5E93\u4E2D\u6587\u4EF6\u5E76\u4FEE\u590D\u65E7\u7248\u6279\u6CE8\u7684\u683C\u5F0F\u95EE\u9898\u3002",
+    settingFixDataButton: "\u5F00\u59CB\u626B\u63CF\u4FEE\u590D",
+    settingExportName: "\u5BFC\u51FA\u6240\u6709\u6279\u6CE8\uFF08\u5F53\u524D\u6587\u4EF6\uFF09",
+    settingExportDesc: "\u5C06\u5F53\u524D\u6587\u6863\u7684\u6240\u6709\u6279\u6CE8\u63D0\u53D6\u5230\u526A\u8D34\u677F\u3002",
+    settingExportButton: "\u590D\u5236\u5230\u526A\u8D34\u677F",
+    exportHeading: "## \u6279\u6CE8\u5BFC\u51FA\n\n",
+    exportOriginal: "\u539F\u6587",
+    exportAnnotation: "\u6279\u6CE8",
+    menuAddTitle: "\u6DFB\u52A0\u6279\u6CE8"
+  }
+};
+var COLOR_OPTIONS = [
+  { value: "red", labelKey: "colorRed", hex: "#e5484d" },
+  { value: "", labelKey: "colorDefault", hex: "#ff9900" },
+  // Orange is default (empty class)
+  { value: "yellow", labelKey: "colorYellow", hex: "#e6c229" },
+  { value: "green", labelKey: "colorGreen", hex: "#2f9d62" },
+  { value: "cyan", labelKey: "colorCyan", hex: "#1abc9c" },
+  { value: "blue", labelKey: "colorBlue", hex: "#3498db" },
+  { value: "purple", labelKey: "colorPurple", hex: "#9b59b6" },
+  { value: "gray", labelKey: "colorGray", hex: "#95a5a6" }
+];
 var DEFAULT_SETTINGS = {
   defaultColor: DEFAULT_COLOR,
   hideAnnotations: false,
@@ -54,7 +240,8 @@ var DEFAULT_SETTINGS = {
   darkOpacity: 25,
   tooltipWidth: 800,
   tooltipFontScale: 100,
-  enableMarkdown: true
+  enableMarkdown: true,
+  language: "en"
 };
 function buildAnnotationClass(color) {
   return color ? "ob-comment " + color : "ob-comment";
@@ -89,10 +276,46 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   constructor() {
     super(...arguments);
     this.tooltipEl = null;
+    this.locale = "en";
   }
   // 记忆上次使用的颜色
+  t(key, params) {
+    const entry = STRINGS[this.locale][key];
+    if (typeof entry === "function") {
+      return entry(params);
+    }
+    return entry;
+  }
+  getColorLabel(key) {
+    return this.t(key);
+  }
+  getCommandRegistry() {
+    var _a;
+    return (_a = this.app.commands) == null ? void 0 : _a.commands;
+  }
+  setCommandName(id, name) {
+    const registry = this.getCommandRegistry();
+    if (!registry) return;
+    const fullId = `${this.manifest.id}:${id}`;
+    if (registry[fullId]) registry[fullId].name = name;
+  }
+  updateCommandNames() {
+    this.setCommandName("add-annotation-html", this.t("cmdAddDefault"));
+    COLOR_OPTIONS.forEach((opt) => {
+      if (opt.value === "") return;
+      const colorLabel = this.getColorLabel(opt.labelKey);
+      this.setCommandName(`add-annotation-${opt.value}`, this.t("cmdAddWithColor", colorLabel));
+    });
+    this.setCommandName("toggle-annotation-visibility", this.t("cmdToggleVisibility"));
+    this.setCommandName("edit-current-annotation", this.t("cmdEditCurrent"));
+    this.setCommandName("delete-current-annotation", this.t("cmdDeleteCurrent"));
+    this.setCommandName("normalize-annotation-data-note-current", this.t("cmdNormalizeCurrent"));
+    this.setCommandName("normalize-annotation-data-note-vault", this.t("cmdNormalizeVault"));
+  }
   async onload() {
+    var _a;
     await this.loadSettings();
+    this.locale = (_a = this.settings.language) != null ? _a : "en";
     _AnnotationPlugin.lastUsedColor = this.settings.defaultColor;
     this.updateStyles();
     this.addSettingTab(new AnnotationSettingTab(this.app, this));
@@ -103,16 +326,17 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     });
     this.addCommand({
       id: "add-annotation-html",
-      name: "\u6DFB\u52A0\u6279\u6CE8 (\u9ED8\u8BA4)",
+      name: this.t("cmdAddDefault"),
       editorCallback: (editor, view) => {
         this.handleAddCommand(editor);
       }
     });
     COLOR_OPTIONS.forEach((opt) => {
       if (opt.value === "") return;
+      const colorLabel = this.getColorLabel(opt.labelKey);
       this.addCommand({
         id: `add-annotation-${opt.value}`,
-        name: `\u6DFB\u52A0\u6279\u6CE8 (${opt.label})`,
+        name: this.t("cmdAddWithColor", colorLabel),
         editorCallback: (editor) => {
           this.handleAddCommand(editor, opt.value);
         }
@@ -120,42 +344,42 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     });
     this.addCommand({
       id: "toggle-annotation-visibility",
-      name: "\u663E\u793A/\u9690\u85CF\u6279\u6CE8\u6837\u5F0F",
+      name: this.t("cmdToggleVisibility"),
       callback: async () => {
         this.settings.hideAnnotations = !this.settings.hideAnnotations;
         this.updateStyles();
         await this.saveSettings();
         if (this.settings.hideAnnotations) {
-          new import_obsidian.Notice("\u6279\u6CE8\u6837\u5F0F\u5DF2\u9690\u85CF");
+          new import_obsidian.Notice(this.t("noticeHidden"));
         } else {
-          new import_obsidian.Notice("\u6279\u6CE8\u6837\u5F0F\u5DF2\u663E\u793A");
+          new import_obsidian.Notice(this.t("noticeShown"));
         }
       }
     });
     this.addCommand({
       id: "edit-current-annotation",
-      name: "\u7F16\u8F91\u5F53\u524D\u6279\u6CE8",
+      name: this.t("cmdEditCurrent"),
       editorCallback: (editor) => {
         this.handleEditCommand(editor);
       }
     });
     this.addCommand({
       id: "delete-current-annotation",
-      name: "\u5220\u9664\u5F53\u524D\u6279\u6CE8",
+      name: this.t("cmdDeleteCurrent"),
       editorCallback: (editor) => {
         this.handleDeleteCommand(editor);
       }
     });
     this.addCommand({
       id: "normalize-annotation-data-note-current",
-      name: "\u4FEE\u590D\u5F53\u524D\u6587\u4EF6\u7684\u6279\u6CE8 data-note",
+      name: this.t("cmdNormalizeCurrent"),
       editorCallback: async (editor) => {
         await this.normalizeCurrentFileAnnotations(editor);
       }
     });
     this.addCommand({
       id: "normalize-annotation-data-note-vault",
-      name: "\u4FEE\u590D\u6240\u6709 Markdown \u6587\u4EF6\u7684\u6279\u6CE8 data-note",
+      name: this.t("cmdNormalizeVault"),
       callback: async () => {
         await this.normalizeAllMarkdownFiles();
       }
@@ -300,9 +524,9 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
         const safeNote = escapeDataNote(newNote);
         const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existing.text}</span>`;
         editor.replaceRange(replacement, existing.from, existing.to);
-      }).open();
+      }, this.locale, this.t.bind(this)).open();
     } else {
-      new import_obsidian.Notice("\u5149\u6807\u5904\u6CA1\u6709\u6279\u6CE8");
+      new import_obsidian.Notice(this.t("noticeNoAnnotation"));
     }
   }
   /**
@@ -313,7 +537,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     if (existing) {
       editor.replaceRange(existing.text, existing.from, existing.to);
     } else {
-      new import_obsidian.Notice("\u5149\u6807\u5904\u6CA1\u6709\u6279\u6CE8");
+      new import_obsidian.Notice(this.t("noticeNoAnnotation"));
     }
   }
   /**
@@ -324,25 +548,26 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     if (existingAnnotation) {
       menu.addSeparator();
       menu.addItem((item) => {
-        item.setTitle("\u6DFB\u52A0\u6279\u6CE8").setIcon("highlighter").onClick(() => {
+        item.setTitle(this.t("ctxAdd")).setIcon("highlighter").onClick(() => {
           const selection = editor.getSelection();
           if (selection) this.performAddAnnotation(editor, selection);
-          else new import_obsidian.Notice("\u8BF7\u5148\u9009\u62E9\u6587\u672C\u4EE5\u6DFB\u52A0\u65B0\u6279\u6CE8");
+          else new import_obsidian.Notice(this.t("noticeNeedSelectionAdd"));
         });
       });
       menu.addItem((item) => {
-        item.setTitle("\u7F16\u8F91\u6279\u6CE8").setIcon("pencil").onClick(() => {
+        item.setTitle(this.t("ctxEdit")).setIcon("pencil").onClick(() => {
           this.handleEditCommand(editor);
         });
       });
       menu.addItem((item) => {
-        item.setTitle(" - \u4FEE\u6539\u989C\u8272").setIcon("palette");
+        item.setTitle(this.t("ctxChangeColor")).setIcon("palette");
         if (item.setSubmenu) {
           const subMenu = item.setSubmenu();
           COLOR_OPTIONS.forEach((opt) => {
             const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+            const colorLabel = this.getColorLabel(opt.labelKey);
             subMenu.addItem((subItem) => {
-              subItem.setTitle(opt.label).setIcon(iconId).onClick(() => {
+              subItem.setTitle(colorLabel).setIcon(iconId).onClick(() => {
                 const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
                 editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
               });
@@ -351,7 +576,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
         }
       });
       menu.addItem((item) => {
-        item.setTitle("\u5220\u9664\u6279\u6CE8").setIcon("trash").onClick(() => {
+        item.setTitle(this.t("ctxDelete")).setIcon("trash").onClick(() => {
           this.handleDeleteCommand(editor);
         });
       });
@@ -360,7 +585,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
       if (selection && selection.trim().length > 0) {
         menu.addSeparator();
         menu.addItem((item) => {
-          item.setTitle("\u6DFB\u52A0\u6279\u6CE8").setIcon("highlighter").onClick(() => {
+          item.setTitle(this.t("ctxAdd")).setIcon("highlighter").onClick(() => {
             this.performAddAnnotation(editor, selection);
           });
         });
@@ -373,11 +598,11 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   handleAddCommand(editor, forcedColor = null) {
     const selection = editor.getSelection();
     if (!selection) {
-      new import_obsidian.Notice("\u8BF7\u5148\u9009\u62E9\u4E00\u6BB5\u6587\u672C");
+      new import_obsidian.Notice(this.t("noticeNeedSelection"));
       return;
     }
     if (selection.includes('<span class="ob-comment"')) {
-      new import_obsidian.Notice("\u4E0D\u652F\u6301\u5728\u5DF2\u6709\u6279\u6CE8\u4E0A\u5D4C\u5957\u6279\u6CE8\uFF0C\u8BF7\u5148\u5220\u9664\u65E7\u6279\u6CE8");
+      new import_obsidian.Notice(this.t("noticeNoNested"));
       return;
     }
     this.performAddAnnotation(editor, selection, forcedColor);
@@ -392,7 +617,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
       const safeNote = escapeDataNote(noteContent);
       const replacement = `<span class="${buildAnnotationClass(colorChoice)}" data-note="${safeNote}">${selectionText}</span>`;
       editor.replaceSelection(replacement);
-    }).open();
+    }, this.locale, this.t.bind(this)).open();
   }
   /**
    * [辅助算法] 扫描全文，判断光标是否位于某个批注 HTML 标签内部
@@ -458,7 +683,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     const docText = editor.getValue();
     const { text, changed } = normalizeAnnotationsInText(docText);
     if (!changed) {
-      new import_obsidian.Notice("\u672A\u53D1\u73B0\u9700\u8981\u4FEE\u590D\u7684\u6279\u6CE8");
+      new import_obsidian.Notice(this.t("noticeNoFixNeeded"));
       return;
     }
     const cursor = editor.getCursor();
@@ -466,13 +691,13 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     const lastLineLen = editor.getLine(lastLine).length;
     editor.replaceRange(text, { line: 0, ch: 0 }, { line: lastLine, ch: lastLineLen });
     editor.setCursor(cursor);
-    new import_obsidian.Notice("\u5F53\u524D\u6587\u4EF6\u7684\u6279\u6CE8\u5DF2\u8F6C\u6362\u4E3A\u5B89\u5168\u683C\u5F0F");
+    new import_obsidian.Notice(this.t("noticeFixedCurrent"));
   }
   /**
    * 扫描并修复库内所有 Markdown 文件的批注 data-note
    */
   async normalizeAllMarkdownFiles() {
-    new import_obsidian.Notice("\u5F00\u59CB\u626B\u63CF\u5E93\u6587\u4EF6\uFF0C\u8BF7\u7A0D\u5019...");
+    new import_obsidian.Notice(this.t("noticeScanStart"));
     const files = this.app.vault.getMarkdownFiles();
     const filesToFix = [];
     for (const file of files) {
@@ -483,7 +708,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
       }
     }
     if (filesToFix.length === 0) {
-      new import_obsidian.Notice("\u672A\u53D1\u73B0\u9700\u8981\u4FEE\u590D\u7684\u6279\u6CE8");
+      new import_obsidian.Notice(this.t("noticeNoFixNeeded"));
       return;
     }
     new BatchFixConfirmModal(this.app, filesToFix, async () => {
@@ -496,8 +721,8 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
           fixedCount++;
         }
       }
-      new import_obsidian.Notice(`\u5DF2\u6210\u529F\u4FEE\u590D ${fixedCount} \u4E2A Markdown \u6587\u4EF6\u7684\u6279\u6CE8`);
-    }).open();
+      new import_obsidian.Notice(this.t("noticeFixedVault", fixedCount));
+    }, this.t.bind(this)).open();
   }
 };
 _AnnotationPlugin.lastUsedColor = DEFAULT_COLOR;
@@ -511,10 +736,24 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     let iconTriggerSetting = null;
-    containerEl.createEl("h2", { text: "\u57FA\u7840\u8BBE\u7F6E (General Settings)" });
-    new import_obsidian.Setting(containerEl).setName("\u9ED8\u8BA4\u6279\u6CE8\u989C\u8272").setDesc("\u51B3\u5B9A\u65B0\u5EFA\u6279\u6CE8\u65F6\u7684\u521D\u59CB\u9009\u4E2D\u989C\u8272\u3002").addDropdown((dropdown) => {
+    const t = this.plugin.t.bind(this.plugin);
+    containerEl.createEl("h2", { text: t("settingsGeneral") });
+    new import_obsidian.Setting(containerEl).setName(t("settingLanguageName")).setDesc(t("settingLanguageDesc")).addDropdown((dropdown) => {
+      var _a;
+      dropdown.addOption("en", t("settingLanguageEn"));
+      dropdown.addOption("zh", t("settingLanguageZh"));
+      dropdown.setValue((_a = this.plugin.settings.language) != null ? _a : "en").onChange(async (value) => {
+        const nextLocale = value === "zh" ? "zh" : "en";
+        this.plugin.settings.language = nextLocale;
+        this.plugin.locale = nextLocale;
+        await this.plugin.saveSettings();
+        this.plugin.updateCommandNames();
+        this.display();
+      });
+    });
+    new import_obsidian.Setting(containerEl).setName(t("settingDefaultColorName")).setDesc(t("settingDefaultColorDesc")).addDropdown((dropdown) => {
       COLOR_OPTIONS.forEach((opt) => {
-        dropdown.addOption(opt.value, opt.label);
+        dropdown.addOption(opt.value, t(opt.labelKey));
       });
       dropdown.setValue(this.plugin.settings.defaultColor).onChange(async (value) => {
         this.plugin.settings.defaultColor = value;
@@ -522,23 +761,23 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian.Setting(containerEl).setName("\u9ED8\u8BA4\u9690\u85CF\u6279\u6CE8").setDesc("\u5F00\u542F\u540E\uFF0CObsidian \u542F\u52A8\u65F6\u5C06\u81EA\u52A8\u9690\u85CF\u6240\u6709\u6279\u6CE8\u7684\u9AD8\u4EAE\u6837\u5F0F\uFF08\u7EAF\u51C0\u9605\u8BFB\u6A21\u5F0F\uFF09\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.hideAnnotations).onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName(t("settingHideDefaultName")).setDesc(t("settingHideDefaultDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.hideAnnotations).onChange(async (value) => {
       this.plugin.settings.hideAnnotations = value;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: "\u5916\u89C2\u6837\u5F0F (Appearance)" });
-    new import_obsidian.Setting(containerEl).setName("\u663E\u793A\u4E0B\u5212\u7EBF").setDesc("\u4E3A\u6279\u6CE8\u6587\u672C\u6DFB\u52A0\u5E95\u90E8\u5F69\u8272\u4E0B\u5212\u7EBF\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableUnderline).onChange(async (value) => {
+    containerEl.createEl("h2", { text: t("settingsAppearance") });
+    new import_obsidian.Setting(containerEl).setName(t("settingUnderlineName")).setDesc(t("settingUnderlineDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableUnderline).onChange(async (value) => {
       this.plugin.settings.enableUnderline = value;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    new import_obsidian.Setting(containerEl).setName("\u663E\u793A\u80CC\u666F\u8272").setDesc("\u4E3A\u6279\u6CE8\u6587\u672C\u6DFB\u52A0\u534A\u900F\u660E\u80CC\u666F\u9AD8\u4EAE\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableBackground).onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName(t("settingBackgroundName")).setDesc(t("settingBackgroundDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableBackground).onChange(async (value) => {
       this.plugin.settings.enableBackground = value;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    new import_obsidian.Setting(containerEl).setName("\u663E\u793A\u6587\u672B\u56FE\u6807").setDesc("\u5728\u6279\u6CE8\u6587\u672C\u672B\u5C3E\u8FFD\u52A0\u4E00\u4E2A\u5C0F\u7684\u201C\u{1F4DD}\u201D\u56FE\u6807 (\u4F2A\u5143\u7D20)\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableIcon).onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName(t("settingIconName")).setDesc(t("settingIconDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableIcon).onChange(async (value) => {
       this.plugin.settings.enableIcon = value;
       this.plugin.updateStyles();
       if (iconTriggerSetting) {
@@ -546,27 +785,27 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
       }
       await this.plugin.saveSettings();
     }));
-    iconTriggerSetting = new import_obsidian.Setting(containerEl).setName("\u6587\u672B\u56FE\u6807\u89E6\u53D1\u65B9\u5F0F").setDesc("\u4EC5\u5728\u201C\u4EC5\u56FE\u6807\u201D\u6A21\u5F0F\u4E0B\u751F\u6548\uFF1A\u9009\u62E9\u60AC\u6D6E\u56FE\u6807\u81EA\u52A8\u5F39\u51FA\uFF0C\u6216\u9700\u70B9\u51FB\u56FE\u6807\u540E\u624D\u663E\u793A\u6279\u6CE8\u3002").addDropdown((dropdown) => {
-      dropdown.addOption("hover", "\u79FB\u52A8\u5230\u56FE\u6807\u81EA\u52A8\u60AC\u6D6E");
-      dropdown.addOption("click", "\u70B9\u51FB\u56FE\u6807\u540E\u518D\u60AC\u6D6E");
+    iconTriggerSetting = new import_obsidian.Setting(containerEl).setName(t("settingIconTriggerName")).setDesc(t("settingIconTriggerDesc")).addDropdown((dropdown) => {
+      dropdown.addOption("hover", t("settingIconHover"));
+      dropdown.addOption("click", t("settingIconClick"));
       dropdown.setValue(this.plugin.settings.iconTooltipTrigger).onChange(async (value) => {
         const nextValue = value === "click" ? "click" : "hover";
         this.plugin.settings.iconTooltipTrigger = nextValue;
         await this.plugin.saveSettings();
       });
     }).setDisabled(!this.plugin.settings.enableIcon);
-    new import_obsidian.Setting(containerEl).setName("\u6D45\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6").setDesc("\u8C03\u6574 Light \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002").addSlider((slider) => slider.setLimits(0, 100, 5).setValue(this.plugin.settings.lightOpacity).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName(t("settingLightOpacityName")).setDesc(t("settingLightOpacityDesc")).addSlider((slider) => slider.setLimits(0, 100, 5).setValue(this.plugin.settings.lightOpacity).setDynamicTooltip().onChange(async (value) => {
       this.plugin.settings.lightOpacity = value;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    new import_obsidian.Setting(containerEl).setName("\u6DF1\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6").setDesc("\u8C03\u6574 Dark \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002").addSlider((slider) => slider.setLimits(0, 100, 5).setValue(this.plugin.settings.darkOpacity).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian.Setting(containerEl).setName(t("settingDarkOpacityName")).setDesc(t("settingDarkOpacityDesc")).addSlider((slider) => slider.setLimits(0, 100, 5).setValue(this.plugin.settings.darkOpacity).setDynamicTooltip().onChange(async (value) => {
       this.plugin.settings.darkOpacity = value;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: "\u4EA4\u4E92\u4F53\u9A8C (Interaction)" });
-    new import_obsidian.Setting(containerEl).setName("Tooltip \u6700\u5927\u5BBD\u5EA6").setDesc("\u9650\u5236\u60AC\u6D6E\u6C14\u6CE1\u7684\u6700\u5927\u5BBD\u5EA6 (px)\u3002").addText((text) => text.setPlaceholder("800").setValue(this.plugin.settings.tooltipWidth.toString()).onChange(async (value) => {
+    containerEl.createEl("h2", { text: t("settingsInteraction") });
+    new import_obsidian.Setting(containerEl).setName(t("settingTooltipWidthName")).setDesc(t("settingTooltipWidthDesc")).addText((text) => text.setPlaceholder("800").setValue(this.plugin.settings.tooltipWidth.toString()).onChange(async (value) => {
       const num = parseInt(value);
       if (!isNaN(num)) {
         this.plugin.settings.tooltipWidth = num;
@@ -574,54 +813,97 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettings();
       }
     }));
-    new import_obsidian.Setting(containerEl).setName("Tooltip \u5B57\u4F53\u7F29\u653E").setDesc("\u8C03\u6574\u6C14\u6CE1\u5185\u6587\u5B57\u7684\u5927\u5C0F\u767E\u5206\u6BD4 (100% \u4E3A\u9ED8\u8BA4)\u3002").addSlider((slider) => slider.setLimits(50, 200, 10).setValue(this.plugin.settings.tooltipFontScale).setDynamicTooltip().onChange(async (value) => {
-      this.plugin.settings.tooltipFontScale = value;
+    const fontStepSize = 10;
+    const fontStepMax = 3;
+    const clampStep = (val) => Math.min(Math.max(val, -fontStepMax), fontStepMax);
+    const getCurrentStep = () => {
+      var _a;
+      const base = DEFAULT_SETTINGS.tooltipFontScale;
+      const current = (_a = this.plugin.settings.tooltipFontScale) != null ? _a : base;
+      return clampStep(Math.round((current - base) / fontStepSize));
+    };
+    const formatStepLabel = (step) => {
+      if (step === 0) return t("settingFontStepDefault");
+      const abs = Math.abs(step);
+      if (abs === 1) return t("settingFontStep", step);
+      return t("settingFontStepPlural", step);
+    };
+    const fontSizeSetting = new import_obsidian.Setting(containerEl).setName(t("settingFontAdjustName"));
+    fontSizeSetting.descEl.empty();
+    fontSizeSetting.descEl.createSpan({ text: t("settingFontAdjustDescPrefix") });
+    const fontStepLabelEl = fontSizeSetting.descEl.createSpan({ text: formatStepLabel(getCurrentStep()) });
+    const applyFontStep = async (delta) => {
+      const base = DEFAULT_SETTINGS.tooltipFontScale;
+      const nextStep = clampStep(getCurrentStep() + delta);
+      const nextScale = base + nextStep * fontStepSize;
+      this.plugin.settings.tooltipFontScale = nextScale;
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u542F\u7528 Markdown \u6E32\u67D3").setDesc("\u5F00\u542F\u540E\uFF0C\u6279\u6CE8\u5185\u5BB9\u5C06\u652F\u6301 Markdown \u8BED\u6CD5\uFF08\u7C97\u4F53\u3001\u8868\u683C\u7B49\uFF09\u3002\u5173\u95ED\u5219\u663E\u793A\u7EAF\u6587\u672C\u6E90\u7801\u3002").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableMarkdown).onChange(async (value) => {
+      fontStepLabelEl.setText(formatStepLabel(nextStep));
+    };
+    fontSizeSetting.addButton((button) => {
+      button.setButtonText(t("settingFontSmaller"));
+      button.onClick(async () => {
+        await applyFontStep(-1);
+      });
+    });
+    fontSizeSetting.addButton((button) => {
+      button.setButtonText(t("settingFontLarger"));
+      button.setCta();
+      button.onClick(async () => {
+        await applyFontStep(1);
+      });
+    });
+    new import_obsidian.Setting(containerEl).setName(t("settingMarkdownName")).setDesc(t("settingMarkdownDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableMarkdown).onChange(async (value) => {
       this.plugin.settings.enableMarkdown = value;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: "\u9AD8\u7EA7\u4E0E\u7EF4\u62A4 (Advanced)" });
-    new import_obsidian.Setting(containerEl).setName("\u4E00\u952E\u4FEE\u590D\u6570\u636E").setDesc("\u626B\u63CF\u5E93\u4E2D\u6240\u6709\u6587\u4EF6\uFF0C\u4FEE\u590D\u65E7\u7248\u6279\u6CE8\u7684\u6570\u636E\u683C\u5F0F\u95EE\u9898\u3002").addButton((button) => button.setButtonText("\u5F00\u59CB\u626B\u63CF\u4FEE\u590D").onClick(async () => {
+    containerEl.createEl("h2", { text: t("settingsAdvanced") });
+    new import_obsidian.Setting(containerEl).setName(t("settingFixDataName")).setDesc(t("settingFixDataDesc")).addButton((button) => button.setButtonText(t("settingFixDataButton")).onClick(async () => {
       await this.plugin.normalizeAllMarkdownFiles();
     }));
-    new import_obsidian.Setting(containerEl).setName("\u5BFC\u51FA\u6240\u6709\u6279\u6CE8 (\u5F53\u524D\u6587\u4EF6)").setDesc("\u5C06\u5F53\u524D\u6587\u6863\u4E2D\u7684\u6240\u6709\u6279\u6CE8\u63D0\u53D6\u5230\u526A\u8D34\u677F\u3002").addButton((button) => button.setButtonText("\u590D\u5236\u5230\u526A\u8D34\u677F").onClick(async () => {
+    new import_obsidian.Setting(containerEl).setName(t("settingExportName")).setDesc(t("settingExportDesc")).addButton((button) => button.setButtonText(t("settingExportButton")).onClick(async () => {
       const view = this.plugin.app.workspace.getActiveViewOfType(import_obsidian.MarkdownView);
       if (view) {
         const text = view.editor.getValue();
         const regex = /<span class="ob-comment(?:\s+[\w-]+)?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
         let match;
-        let output = "## Annotations Export\n\n";
+        let output = this.plugin.t("exportHeading");
         while ((match = regex.exec(text)) !== null) {
           const note = decodeDataNote(match[1]);
           const original = match[2];
-          output += `- **\u539F\u6587**: "${original}"
-  - **\u6279\u6CE8**: ${note}
+          output += `- **${this.plugin.t("exportOriginal")}**: "${original}"
+  - **${this.plugin.t("exportAnnotation")}**: ${note}
 `;
         }
         await navigator.clipboard.writeText(output);
-        new import_obsidian.Notice("\u6279\u6CE8\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F\uFF01");
+        new import_obsidian.Notice(this.plugin.t("noticeCopied"));
       } else {
-        new import_obsidian.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u6863");
+        new import_obsidian.Notice(this.plugin.t("noticeOpenDoc"));
       }
     }));
   }
 };
 var AnnotationModal = class extends import_obsidian.Modal {
-  constructor(app, defaultValue, defaultColor, onSubmit) {
+  constructor(app, defaultValue, defaultColor, onSubmit, locale, translate) {
     super(app);
     this.colorLabelEl = null;
     this.defaultValue = defaultValue;
     this.defaultColor = defaultColor;
     this.selectedColor = defaultColor || DEFAULT_COLOR;
     this.onSubmit = onSubmit;
+    this.locale = locale;
+    this.translate = translate;
     this.modalEl.addClass("ob-annotation-modal-container");
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.createEl("h2", { text: this.defaultValue ? "\u7F16\u8F91\u6279\u6CE8" : "\u8F93\u5165\u6279\u6CE8\u5185\u5BB9" });
+    const headerRow = contentEl.createDiv({ cls: "annotation-header-row" });
+    headerRow.createEl("h2", { text: this.defaultValue ? this.translate("modalTitleEdit") : this.translate("modalTitleNew") });
+    headerRow.createDiv({
+      cls: "annotation-key-hint",
+      text: this.translate("modalKeyHint")
+    });
     const inputEl = contentEl.createEl("textarea", {
       cls: "annotation-input",
       attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" }
@@ -642,28 +924,31 @@ var AnnotationModal = class extends import_obsidian.Modal {
       cls: "setting-item-name",
       attr: { style: "margin-bottom: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;" }
     });
-    colorHeader.createSpan({ text: "\u6279\u6CE8\u989C\u8272" });
+    colorHeader.createSpan({ text: this.translate("modalColorLabel") });
     this.colorLabelEl = colorHeader.createSpan({
       cls: "annotation-color-label",
       attr: { style: "font-weight: normal; font-size: 0.9em; color: var(--text-muted);" }
     });
-    const colorContainer = colorWrapper.createDiv({ cls: "annotation-color-container" });
+    const colorRow = colorWrapper.createDiv({ cls: "annotation-color-row" });
+    const colorContainer = colorRow.createDiv({ cls: "annotation-color-container" });
+    const btnContainer = colorRow.createDiv({ cls: "modal-button-container inline" });
     COLOR_OPTIONS.forEach((opt) => {
+      const colorLabel = this.translate(opt.labelKey);
       const colorItem = colorContainer.createDiv({
         cls: "annotation-color-item",
-        attr: { "aria-label": opt.label, "title": opt.label, "tabindex": "0" }
+        attr: { "aria-label": colorLabel, "title": colorLabel, "tabindex": "0" }
         // 支持键盘 Tab 聚焦
       });
       colorItem.style.backgroundColor = opt.hex;
       if (opt.value === this.selectedColor) {
         colorItem.addClass("is-active");
-        this.updateColorLabel(opt.label);
+        this.updateColorLabel(colorLabel);
       }
       const selectAction = () => {
         colorContainer.querySelectorAll(".annotation-color-item").forEach((el) => el.removeClass("is-active"));
         colorItem.addClass("is-active");
         this.selectedColor = opt.value;
-        this.updateColorLabel(opt.label);
+        this.updateColorLabel(colorLabel);
       };
       colorItem.addEventListener("click", selectAction);
       colorItem.addEventListener("keydown", (e) => {
@@ -682,17 +967,16 @@ var AnnotationModal = class extends import_obsidian.Modal {
         this.submit(inputEl.value);
       }
     });
-    const btnContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    const cancelBtn = btnContainer.createEl("button", { text: "\u53D6\u6D88" });
+    const cancelBtn = btnContainer.createEl("button", { text: this.translate("modalCancel") });
     cancelBtn.addEventListener("click", () => this.close());
-    const submitBtn = btnContainer.createEl("button", { text: "\u786E\u5B9A", cls: "mod-cta" });
+    const submitBtn = btnContainer.createEl("button", { text: this.translate("modalConfirm"), cls: "mod-cta" });
     submitBtn.addEventListener("click", () => {
       this.submit(inputEl.value);
     });
   }
   updateColorLabel(label) {
     if (this.colorLabelEl) {
-      this.colorLabelEl.setText(label);
+      this.colorLabelEl.setText(`${this.translate("modalColorCurrent")}${label}`);
     }
   }
   submit(value) {
@@ -705,25 +989,26 @@ var AnnotationModal = class extends import_obsidian.Modal {
   }
 };
 var BatchFixConfirmModal = class extends import_obsidian.Modal {
-  constructor(app, filesToFix, onConfirm) {
+  constructor(app, filesToFix, onConfirm, translate) {
     super(app);
     this.filesToFix = filesToFix;
     this.onConfirm = onConfirm;
+    this.translate = translate;
   }
   onOpen() {
     const { contentEl } = this;
-    contentEl.createEl("h2", { text: "\u26A0\uFE0F \u6279\u91CF\u4FEE\u590D\u786E\u8BA4" });
+    contentEl.createEl("h2", { text: this.translate("batchTitle") });
     contentEl.createEl("p", {
-      text: `\u626B\u63CF\u53D1\u73B0\u5171\u6709 ${this.filesToFix.length} \u4E2A\u6587\u4EF6\u5305\u542B\u65E7\u683C\u5F0F\u6216\u9700\u8981\u89C4\u8303\u5316\u7684\u6279\u6CE8\u3002`
+      text: this.translate("batchSummary", this.filesToFix.length)
     });
     contentEl.createEl("p", {
-      text: "\u6267\u884C\u4FEE\u590D\u5C06\u66F4\u65B0\u8FD9\u4E9B\u6587\u4EF6\u4E2D\u7684 HTML \u7ED3\u6784\uFF08\u4E3B\u8981\u662F data-note \u5C5E\u6027\u7684\u5B89\u5168\u8F6C\u4E49\uFF09\u3002\u5EFA\u8BAE\u5728\u6267\u884C\u524D\u5BF9 Vault \u8FDB\u884C\u5907\u4EFD\u3002",
+      text: this.translate("batchWarning"),
       cls: "mod-warning"
     });
     const btnContainer = contentEl.createDiv({ cls: "modal-button-container", attr: { style: "display: flex; justify-content: flex-end; gap: 10px;" } });
-    const cancelBtn = btnContainer.createEl("button", { text: "\u53D6\u6D88" });
+    const cancelBtn = btnContainer.createEl("button", { text: this.translate("batchCancel") });
     cancelBtn.addEventListener("click", () => this.close());
-    const confirmBtn = btnContainer.createEl("button", { text: `\u786E\u8BA4\u4FEE\u590D (${this.filesToFix.length} \u4E2A\u6587\u4EF6)`, cls: "mod-cta" });
+    const confirmBtn = btnContainer.createEl("button", { text: this.translate("batchConfirm", this.filesToFix.length), cls: "mod-cta" });
     confirmBtn.addEventListener("click", () => {
       this.close();
       this.onConfirm();

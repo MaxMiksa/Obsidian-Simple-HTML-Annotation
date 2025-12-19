@@ -8,18 +8,229 @@ type IconTooltipTrigger = 'hover' | 'click';
 // 定义 HTML 标签的正则结构 (支持多行 + 颜色 class)
 const COMMENT_REGEX = /<span class="ob-comment(?:\s+([\w-]+))?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
 
-const COLOR_OPTIONS: { value: AnnotationColor; label: string; hex: string }[] = [
-	{ value: "red", label: "红色", hex: "#e5484d" },
-	{ value: "", label: "橙色 (默认)", hex: "#ff9900" }, // Orange is default (empty class)
-	{ value: "yellow", label: "黄色", hex: "#e6c229" },
-	{ value: "green", label: "绿色", hex: "#2f9d62" },
-	{ value: "cyan", label: "青色", hex: "#1abc9c" },
-	{ value: "blue", label: "蓝色", hex: "#3498db" },
-	{ value: "purple", label: "紫色", hex: "#9b59b6" },
-	{ value: "gray", label: "灰色", hex: "#95a5a6" },
-];
-
 const DEFAULT_COLOR: AnnotationColor = "";
+
+type Locale = 'en' | 'zh';
+
+const STRINGS = {
+	en: {
+		settingLanguageName: "Language",
+		settingLanguageDesc: "Choose plugin UI language (default: English).",
+		settingLanguageEn: "English",
+		settingLanguageZh: "Simplified Chinese",
+
+		colorRed: "Red",
+		colorDefault: "Orange (default)",
+		colorYellow: "Yellow",
+		colorGreen: "Green",
+		colorCyan: "Cyan",
+		colorBlue: "Blue",
+		colorPurple: "Purple",
+		colorGray: "Gray",
+
+		cmdAddDefault: "Add Annotation (Default)",
+		cmdAddWithColor: (color: string) => `Add Annotation (${color})`,
+		cmdToggleVisibility: "Show/Hide Annotation Styles",
+		cmdEditCurrent: "Edit Current Annotation",
+		cmdDeleteCurrent: "Delete Current Annotation",
+		cmdNormalizeCurrent: "Fix Current File Annotation data-note",
+		cmdNormalizeVault: "Fix All Markdown Annotation data-note",
+
+		noticeHidden: "Annotation styles are now hidden",
+		noticeShown: "Annotation styles are now visible",
+		noticeNoAnnotation: "No annotation at cursor",
+		noticeNeedSelection: "Please select some text first",
+		noticeNoNested: "Nested annotations are not supported; remove the old one first",
+		noticeNoFixNeeded: "No annotations need fixing",
+		noticeFixedCurrent: "Annotations in this file are now safe-formatted",
+		noticeScanStart: "Scanning vault, please wait...",
+		noticeFixedVault: (count: number) => `Successfully fixed annotations in ${count} Markdown file(s)`,
+		noticeNeedSelectionAdd: "Please select text to add a new annotation",
+		noticeCopied: "Annotations copied to clipboard!",
+		noticeOpenDoc: "Please open a Markdown document first",
+
+		ctxAdd: "Add Annotation",
+		ctxEdit: "Edit Annotation",
+		ctxChangeColor: " - Change Color",
+		ctxDelete: "Delete Annotation",
+
+		modalTitleEdit: "Edit Annotation",
+		modalTitleNew: "Enter Annotation Content",
+		modalColorLabel: "Annotation Color",
+		modalKeyHint: "Enter: submit annotation; Shift+Enter: newline",
+		modalCancel: "Cancel",
+		modalConfirm: "Confirm",
+		modalColorCurrent: "Current color: ",
+
+		batchTitle: "⚠️ Batch Fix Confirmation",
+		batchSummary: (count: number) => `Found ${count} file(s) with legacy or unsafe annotations.`,
+		batchWarning: "Fixing will update HTML (data-note escaping). Please backup your vault first.",
+		batchConfirm: (count: number) => `Confirm fix (${count} files)`,
+		batchCancel: "Cancel",
+
+		settingsGeneral: "General Settings",
+		settingsAppearance: "Appearance",
+		settingsInteraction: "Interaction",
+		settingsAdvanced: "Advanced & Maintenance",
+
+		settingDefaultColorName: "Default annotation color",
+		settingDefaultColorDesc: "Initial color when creating a new annotation.",
+		settingHideDefaultName: "Hide annotations by default",
+		settingHideDefaultDesc: "On app launch, hide all annotation styling for a clean reading mode.",
+		settingUnderlineName: "Show underline",
+		settingUnderlineDesc: "Add a colored underline to annotated text.",
+		settingBackgroundName: "Show background highlight",
+		settingBackgroundDesc: "Add a translucent background highlight to annotated text.",
+		settingIconName: "Show end icon",
+		settingIconDesc: 'Append a small "📝" icon (pseudo-element) to annotated text.',
+		settingIconTriggerName: "End icon trigger",
+		settingIconTriggerDesc: "Only in icon-only mode: show tooltip on hover, or require click first.",
+		settingIconHover: "Hover to show",
+		settingIconClick: "Click to show",
+		settingLightOpacityName: "Light theme opacity",
+		settingLightOpacityDesc: "Adjust highlight depth for Light themes (0% - 100%).",
+		settingDarkOpacityName: "Dark theme opacity",
+		settingDarkOpacityDesc: "Adjust highlight depth for Dark themes (0% - 100%).",
+		settingTooltipWidthName: "Tooltip max width",
+		settingTooltipWidthDesc: "Limit tooltip width (px).",
+		settingFontAdjustName: "Adjust font size",
+		settingFontAdjustDescPrefix: "Adjust annotation font by steps (max ±3). Current: ",
+		settingFontStepDefault: "Default",
+		settingFontStep: (step: number) => `${step > 0 ? "+" : ""}${step} step`,
+		settingFontStepPlural: (step: number) => `${step > 0 ? "+" : ""}${step} steps`,
+		settingFontSmaller: "Smaller",
+		settingFontLarger: "Larger",
+		settingMarkdownName: "Enable Markdown rendering",
+		settingMarkdownDesc: "Render annotation content as Markdown. Off = show plain text.",
+		settingFixDataName: "One-click repair",
+		settingFixDataDesc: "Scan all files and fix legacy annotation format issues.",
+		settingFixDataButton: "Start scan & fix",
+		settingExportName: "Export annotations (current file)",
+		settingExportDesc: "Extract all annotations from the current document to clipboard.",
+		settingExportButton: "Copy to clipboard",
+
+		exportHeading: "## Annotations Export\n\n",
+		exportOriginal: "Original",
+		exportAnnotation: "Annotation",
+
+		menuAddTitle: "Add Annotation",
+	},
+	zh: {
+		settingLanguageName: "语言",
+		settingLanguageDesc: "选择插件界面语言（默认：英文）。",
+		settingLanguageEn: "英语",
+		settingLanguageZh: "简体中文",
+
+		colorRed: "红色",
+		colorDefault: "橙色（默认）",
+		colorYellow: "黄色",
+		colorGreen: "绿色",
+		colorCyan: "青色",
+		colorBlue: "蓝色",
+		colorPurple: "紫色",
+		colorGray: "灰色",
+
+		cmdAddDefault: "添加批注（默认）",
+		cmdAddWithColor: (color: string) => `添加批注（${color}）`,
+		cmdToggleVisibility: "显示/隐藏批注样式",
+		cmdEditCurrent: "编辑当前批注",
+		cmdDeleteCurrent: "删除当前批注",
+		cmdNormalizeCurrent: "修复当前文件的批注 data-note",
+		cmdNormalizeVault: "修复所有 Markdown 文件的批注 data-note",
+
+		noticeHidden: "批注样式已隐藏",
+		noticeShown: "批注样式已显示",
+		noticeNoAnnotation: "光标处没有批注",
+		noticeNeedSelection: "请先选择一段文本",
+		noticeNoNested: "不支持在已有批注上嵌套批注，请先删除旧批注",
+		noticeNoFixNeeded: "未发现需要修复的批注",
+		noticeFixedCurrent: "当前文件的批注已转换为安全格式",
+		noticeScanStart: "开始扫描库文件，请稍候...",
+		noticeFixedVault: (count: number) => `已成功修复 ${count} 个 Markdown 文件的批注`,
+		noticeNeedSelectionAdd: "请先选择文本以添加新批注",
+		noticeCopied: "批注已复制到剪贴板！",
+		noticeOpenDoc: "请先打开一个 Markdown 文档",
+
+		ctxAdd: "添加批注",
+		ctxEdit: "编辑批注",
+		ctxChangeColor: " - 修改颜色",
+		ctxDelete: "删除批注",
+
+		modalTitleEdit: "编辑批注",
+		modalTitleNew: "输入批注内容",
+		modalColorLabel: "批注颜色",
+		modalKeyHint: "Enter：完成批注；Shift+Enter：换行",
+		modalCancel: "取消",
+		modalConfirm: "确定",
+		modalColorCurrent: "当前颜色：",
+
+		batchTitle: "⚠️ 批量修复确认",
+		batchSummary: (count: number) => `扫描发现共有 ${count} 个文件包含旧格式或需要规范化的批注。`,
+		batchWarning: "执行修复将更新这些文件中的 HTML 结构（主要是 data-note 的安全转义）。建议先备份 Vault。",
+		batchConfirm: (count: number) => `确认修复（${count} 个文件）`,
+		batchCancel: "取消",
+
+		settingsGeneral: "基础设置",
+		settingsAppearance: "外观样式",
+		settingsInteraction: "交互体验",
+		settingsAdvanced: "高级与维护",
+
+		settingDefaultColorName: "默认批注颜色",
+		settingDefaultColorDesc: "新建批注时的初始选中颜色。",
+		settingHideDefaultName: "默认隐藏批注",
+		settingHideDefaultDesc: "Obsidian 启动时自动隐藏所有批注样式（纯净阅读模式）。",
+		settingUnderlineName: "显示下划线",
+		settingUnderlineDesc: "为批注文本添加底部彩色下划线。",
+		settingBackgroundName: "显示背景色",
+		settingBackgroundDesc: "为批注文本添加半透明背景高亮。",
+		settingIconName: "显示文末图标",
+		settingIconDesc: "在批注文本末尾追加一个小的“📝”图标（伪元素）。",
+		settingIconTriggerName: "文末图标触发方式",
+		settingIconTriggerDesc: "仅在“仅图标”模式下生效：悬浮自动显示或需点击后显示批注。",
+		settingIconHover: "移动到图标自动悬浮",
+		settingIconClick: "点击图标后再悬浮",
+		settingLightOpacityName: "浅色模式不透明度",
+		settingLightOpacityDesc: "调整 Light 主题下高亮背景的深浅 (0% - 100%)。",
+		settingDarkOpacityName: "深色模式不透明度",
+		settingDarkOpacityDesc: "调整 Dark 主题下高亮背景的深浅 (0% - 100%)。",
+		settingTooltipWidthName: "Tooltip 最大宽度",
+		settingTooltipWidthDesc: "限制悬浮气泡的最大宽度 (px)。",
+		settingFontAdjustName: "调节字体大小",
+		settingFontAdjustDescPrefix: "批注内容字体按档位调整（最多 ±3 档）。 当前：",
+		settingFontStepDefault: "默认",
+		settingFontStep: (step: number) => `${step > 0 ? "+" : ""}${step} 档`,
+		settingFontStepPlural: (step: number) => `${step > 0 ? "+" : ""}${step} 档`,
+		settingFontSmaller: "减小一号",
+		settingFontLarger: "加大一号",
+		settingMarkdownName: "启用 Markdown 渲染",
+		settingMarkdownDesc: "开启后，批注内容支持 Markdown；关闭则显示纯文本。",
+		settingFixDataName: "一键修复数据",
+		settingFixDataDesc: "扫描库中文件并修复旧版批注的格式问题。",
+		settingFixDataButton: "开始扫描修复",
+		settingExportName: "导出所有批注（当前文件）",
+		settingExportDesc: "将当前文档的所有批注提取到剪贴板。",
+		settingExportButton: "复制到剪贴板",
+
+		exportHeading: "## 批注导出\n\n",
+		exportOriginal: "原文",
+		exportAnnotation: "批注",
+
+		menuAddTitle: "添加批注",
+	}
+};
+
+type LocaleKey = keyof typeof STRINGS.en;
+
+const COLOR_OPTIONS: { value: AnnotationColor; labelKey: LocaleKey; hex: string }[] = [
+	{ value: "red", labelKey: "colorRed", hex: "#e5484d" },
+	{ value: "", labelKey: "colorDefault", hex: "#ff9900" }, // Orange is default (empty class)
+	{ value: "yellow", labelKey: "colorYellow", hex: "#e6c229" },
+	{ value: "green", labelKey: "colorGreen", hex: "#2f9d62" },
+	{ value: "cyan", labelKey: "colorCyan", hex: "#1abc9c" },
+	{ value: "blue", labelKey: "colorBlue", hex: "#3498db" },
+	{ value: "purple", labelKey: "colorPurple", hex: "#9b59b6" },
+	{ value: "gray", labelKey: "colorGray", hex: "#95a5a6" },
+];
 
 interface SimpleHTMLAnnotationSettings {
 	defaultColor: AnnotationColor;
@@ -33,6 +244,7 @@ interface SimpleHTMLAnnotationSettings {
 	tooltipWidth: number;
 	tooltipFontScale: number;
 	enableMarkdown: boolean;
+	language: Locale;
 }
 
 const DEFAULT_SETTINGS: SimpleHTMLAnnotationSettings = {
@@ -46,7 +258,8 @@ const DEFAULT_SETTINGS: SimpleHTMLAnnotationSettings = {
 	darkOpacity: 25,
 	tooltipWidth: 800,
 	tooltipFontScale: 100,
-	enableMarkdown: true
+	enableMarkdown: true,
+	language: 'en'
 }
 
 function buildAnnotationClass(color: AnnotationColor): string {
@@ -109,10 +322,51 @@ function normalizeAnnotationsInText(text: string): { text: string; changed: bool
 export default class AnnotationPlugin extends Plugin {
 	settings: SimpleHTMLAnnotationSettings;
 	tooltipEl: HTMLElement | null = null;
+	locale: Locale = 'en';
 	static lastUsedColor: AnnotationColor = DEFAULT_COLOR; // 记忆上次使用的颜色
+
+	t(key: LocaleKey, params?: any): string {
+		const entry = STRINGS[this.locale][key];
+		if (typeof entry === "function") {
+			return (entry as (p: any) => string)(params);
+		}
+		return entry;
+	}
+
+	private getColorLabel(key: LocaleKey): string {
+		return this.t(key);
+	}
+
+	private getCommandRegistry() {
+		// @ts-ignore internal API access
+		return this.app.commands?.commands;
+	}
+
+	private setCommandName(id: string, name: string) {
+		const registry = this.getCommandRegistry();
+		if (!registry) return;
+		const fullId = `${this.manifest.id}:${id}`;
+		if (registry[fullId]) registry[fullId].name = name;
+	}
+
+	updateCommandNames() {
+		this.setCommandName('add-annotation-html', this.t('cmdAddDefault'));
+		COLOR_OPTIONS.forEach(opt => {
+			if (opt.value === "") return;
+			const colorLabel = this.getColorLabel(opt.labelKey);
+			this.setCommandName(`add-annotation-${opt.value}`, this.t('cmdAddWithColor', colorLabel));
+		});
+		this.setCommandName('toggle-annotation-visibility', this.t('cmdToggleVisibility'));
+		this.setCommandName('edit-current-annotation', this.t('cmdEditCurrent'));
+		this.setCommandName('delete-current-annotation', this.t('cmdDeleteCurrent'));
+		this.setCommandName('normalize-annotation-data-note-current', this.t('cmdNormalizeCurrent'));
+		this.setCommandName('normalize-annotation-data-note-vault', this.t('cmdNormalizeVault'));
+	}
 
 	async onload() {
 		await this.loadSettings();
+
+		this.locale = this.settings.language ?? 'en';
 
 		// 初始化：从设置中读取默认颜色
 		AnnotationPlugin.lastUsedColor = this.settings.defaultColor;
@@ -133,7 +387,7 @@ export default class AnnotationPlugin extends Plugin {
 		// 1. 注册“添加批注”命令
 		this.addCommand({
 			id: 'add-annotation-html',
-			name: '添加批注 (默认)',
+			name: this.t('cmdAddDefault'),
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.handleAddCommand(editor);
 			}
@@ -142,9 +396,10 @@ export default class AnnotationPlugin extends Plugin {
 		// 注册特定颜色命令
 		COLOR_OPTIONS.forEach(opt => {
 			if (opt.value === "") return;
+			const colorLabel = this.getColorLabel(opt.labelKey);
 			this.addCommand({
 				id: `add-annotation-${opt.value}`,
-				name: `添加批注 (${opt.label})`,
+				name: this.t('cmdAddWithColor', colorLabel),
 				editorCallback: (editor: Editor) => {
 					this.handleAddCommand(editor, opt.value);
 				}
@@ -154,16 +409,16 @@ export default class AnnotationPlugin extends Plugin {
 		// 注册一键开关命令
 		this.addCommand({
 			id: 'toggle-annotation-visibility',
-			name: '显示/隐藏批注样式',
+			name: this.t('cmdToggleVisibility'),
 			callback: async () => {
 				this.settings.hideAnnotations = !this.settings.hideAnnotations;
 				this.updateStyles();
 				await this.saveSettings();
 				
 				if (this.settings.hideAnnotations) {
-					new Notice("批注样式已隐藏");
+					new Notice(this.t('noticeHidden'));
 				} else {
-					new Notice("批注样式已显示");
+					new Notice(this.t('noticeShown'));
 				}
 			}
 		});
@@ -171,7 +426,7 @@ export default class AnnotationPlugin extends Plugin {
 		// 注册编辑/删除快捷键命令
 		this.addCommand({
 			id: 'edit-current-annotation',
-			name: '编辑当前批注',
+			name: this.t('cmdEditCurrent'),
 			editorCallback: (editor: Editor) => {
 				this.handleEditCommand(editor);
 			}
@@ -179,7 +434,7 @@ export default class AnnotationPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'delete-current-annotation',
-			name: '删除当前批注',
+			name: this.t('cmdDeleteCurrent'),
 			editorCallback: (editor: Editor) => {
 				this.handleDeleteCommand(editor);
 			}
@@ -188,7 +443,7 @@ export default class AnnotationPlugin extends Plugin {
 		// 修复当前文件的批注 data-note 格式
 		this.addCommand({
 			id: 'normalize-annotation-data-note-current',
-			name: '修复当前文件的批注 data-note',
+			name: this.t('cmdNormalizeCurrent'),
 			editorCallback: async (editor: Editor) => {
 				await this.normalizeCurrentFileAnnotations(editor);
 			}
@@ -197,7 +452,7 @@ export default class AnnotationPlugin extends Plugin {
 		// 修复全库所有 Markdown 文件的批注 data-note
 		this.addCommand({
 			id: 'normalize-annotation-data-note-vault',
-			name: '修复所有 Markdown 文件的批注 data-note',
+			name: this.t('cmdNormalizeVault'),
 			callback: async () => {
 				await this.normalizeAllMarkdownFiles();
 			}
@@ -377,9 +632,9 @@ export default class AnnotationPlugin extends Plugin {
 				const safeNote = escapeDataNote(newNote);
 				const replacement = `<span class="${buildAnnotationClass(newColor)}" data-note="${safeNote}">${existing.text}</span>`;
 				editor.replaceRange(replacement, existing.from, existing.to);
-			}).open();
+			}, this.locale, this.t.bind(this)).open();
 		} else {
-			new Notice("光标处没有批注");
+			new Notice(this.t('noticeNoAnnotation'));
 		}
 	}
 
@@ -391,7 +646,7 @@ export default class AnnotationPlugin extends Plugin {
 		if (existing) {
 			editor.replaceRange(existing.text, existing.from, existing.to);
 		} else {
-			new Notice("光标处没有批注");
+			new Notice(this.t('noticeNoAnnotation'));
 		}
 	}
 
@@ -410,19 +665,19 @@ export default class AnnotationPlugin extends Plugin {
 			// 1. 添加批注
 			menu.addItem((item) => {
 				item
-					.setTitle("添加批注")
+					.setTitle(this.t('ctxAdd'))
 					.setIcon("highlighter")
 					.onClick(() => {
 						const selection = editor.getSelection();
 						if(selection) this.performAddAnnotation(editor, selection);
-						else new Notice("请先选择文本以添加新批注");
+						else new Notice(this.t('noticeNeedSelectionAdd'));
 					});
 			});
 
 			// 2. 编辑批注
 			menu.addItem((item) => {
 				item
-					.setTitle("编辑批注")
+					.setTitle(this.t('ctxEdit'))
 					.setIcon("pencil")
 					.onClick(() => {
 						this.handleEditCommand(editor);
@@ -431,14 +686,15 @@ export default class AnnotationPlugin extends Plugin {
 
 			// 3. 修改颜色 (子菜单)
 			menu.addItem((item) => {
-				item.setTitle(" - 修改颜色").setIcon("palette");
+				item.setTitle(this.t('ctxChangeColor')).setIcon("palette");
 				// @ts-ignore
 				if (item.setSubmenu) {
 					const subMenu = item.setSubmenu();
 					COLOR_OPTIONS.forEach(opt => {
 						const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+						const colorLabel = this.getColorLabel(opt.labelKey);
 						subMenu.addItem((subItem: any) => {
-							subItem.setTitle(opt.label)
+							subItem.setTitle(colorLabel)
 								   .setIcon(iconId) // 使用注册的彩色图标
 								   .onClick(() => {
 									   // 直接修改颜色
@@ -453,7 +709,7 @@ export default class AnnotationPlugin extends Plugin {
 			// 4. 删除批注
 			menu.addItem((item) => {
 				item
-					.setTitle("删除批注")
+					.setTitle(this.t('ctxDelete'))
 					.setIcon("trash")
 					.onClick(() => {
 						this.handleDeleteCommand(editor);
@@ -468,7 +724,7 @@ export default class AnnotationPlugin extends Plugin {
 
 				menu.addItem((item) => {
 					item
-						.setTitle("添加批注")
+						.setTitle(this.t('ctxAdd'))
 						.setIcon("highlighter")
 						.onClick(() => {
 							this.performAddAnnotation(editor, selection);
@@ -484,12 +740,12 @@ export default class AnnotationPlugin extends Plugin {
 	handleAddCommand(editor: Editor, forcedColor: AnnotationColor | null = null) {
 		const selection = editor.getSelection();
 		if (!selection) {
-			new Notice("请先选择一段文本");
+			new Notice(this.t('noticeNeedSelection'));
 			return;
 		}
 		// 检查选区内是否已经包含了 HTML 标签，防止嵌套（可选）
 		if (selection.includes('<span class="ob-comment"')) {
-			new Notice("不支持在已有批注上嵌套批注，请先删除旧批注");
+			new Notice(this.t('noticeNoNested'));
 			return;
 		}
 		this.performAddAnnotation(editor, selection, forcedColor);
@@ -509,7 +765,7 @@ export default class AnnotationPlugin extends Plugin {
 			const safeNote = escapeDataNote(noteContent);
 			const replacement = `<span class="${buildAnnotationClass(colorChoice)}" data-note="${safeNote}">${selectionText}</span>`;
 			editor.replaceSelection(replacement);
-		}).open();
+		}, this.locale, this.t.bind(this)).open();
 	}
 
 	/**
@@ -590,7 +846,7 @@ export default class AnnotationPlugin extends Plugin {
 		const { text, changed } = normalizeAnnotationsInText(docText);
 
 		if (!changed) {
-			new Notice("未发现需要修复的批注");
+			new Notice(this.t('noticeNoFixNeeded'));
 			return;
 		}
 
@@ -602,14 +858,14 @@ export default class AnnotationPlugin extends Plugin {
 		editor.replaceRange(text, { line: 0, ch: 0 }, { line: lastLine, ch: lastLineLen });
 		
 		editor.setCursor(cursor);
-		new Notice("当前文件的批注已转换为安全格式");
+		new Notice(this.t('noticeFixedCurrent'));
 	}
 
 	/**
 	 * 扫描并修复库内所有 Markdown 文件的批注 data-note
 	 */
 	private async normalizeAllMarkdownFiles() {
-		new Notice("开始扫描库文件，请稍候...");
+		new Notice(this.t('noticeScanStart'));
 		const files = this.app.vault.getMarkdownFiles();
 		const filesToFix: TFile[] = [];
 
@@ -623,7 +879,7 @@ export default class AnnotationPlugin extends Plugin {
 		}
 
 		if (filesToFix.length === 0) {
-			new Notice("未发现需要修复的批注");
+			new Notice(this.t('noticeNoFixNeeded'));
 			return;
 		}
 
@@ -639,8 +895,8 @@ export default class AnnotationPlugin extends Plugin {
 					fixedCount++;
 				}
 			}
-			new Notice(`已成功修复 ${fixedCount} 个 Markdown 文件的批注`);
-		}).open();
+			new Notice(this.t('noticeFixedVault', fixedCount));
+		}, this.t.bind(this)).open();
 	}
 }
 
@@ -656,16 +912,34 @@ class AnnotationSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		let iconTriggerSetting: Setting | null = null;
+		const t = this.plugin.t.bind(this.plugin);
 
 		// 1. 基础设置 (General Settings)
-		containerEl.createEl('h2', { text: '基础设置 (General Settings)' });
+		containerEl.createEl('h2', { text: t('settingsGeneral') });
 
 		new Setting(containerEl)
-			.setName('默认批注颜色')
-			.setDesc('决定新建批注时的初始选中颜色。')
+			.setName(t('settingLanguageName'))
+			.setDesc(t('settingLanguageDesc'))
+			.addDropdown(dropdown => {
+				dropdown.addOption('en', t('settingLanguageEn'));
+				dropdown.addOption('zh', t('settingLanguageZh'));
+				dropdown.setValue(this.plugin.settings.language ?? 'en')
+					.onChange(async (value) => {
+				const nextLocale: Locale = value === 'zh' ? 'zh' : 'en';
+				this.plugin.settings.language = nextLocale;
+				this.plugin.locale = nextLocale;
+				await this.plugin.saveSettings();
+				this.plugin.updateCommandNames();
+				this.display(); // refresh labels
+			});
+	});
+
+		new Setting(containerEl)
+			.setName(t('settingDefaultColorName'))
+			.setDesc(t('settingDefaultColorDesc'))
 			.addDropdown(dropdown => {
 				COLOR_OPTIONS.forEach(opt => {
-					dropdown.addOption(opt.value, opt.label);
+					dropdown.addOption(opt.value, t(opt.labelKey));
 				});
 				dropdown.setValue(this.plugin.settings.defaultColor)
 					.onChange(async (value) => {
@@ -676,8 +950,8 @@ class AnnotationSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('默认隐藏批注')
-			.setDesc('开启后，Obsidian 启动时将自动隐藏所有批注的高亮样式（纯净阅读模式）。')
+			.setName(t('settingHideDefaultName'))
+			.setDesc(t('settingHideDefaultDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideAnnotations)
 				.onChange(async (value) => {
@@ -687,11 +961,11 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 2. 外观样式 (Appearance)
-		containerEl.createEl('h2', { text: '外观样式 (Appearance)' });
+		containerEl.createEl('h2', { text: t('settingsAppearance') });
 
 		new Setting(containerEl)
-			.setName('显示下划线')
-			.setDesc('为批注文本添加底部彩色下划线。')
+			.setName(t('settingUnderlineName'))
+			.setDesc(t('settingUnderlineDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableUnderline)
 				.onChange(async (value) => {
@@ -701,8 +975,8 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('显示背景色')
-			.setDesc('为批注文本添加半透明背景高亮。')
+			.setName(t('settingBackgroundName'))
+			.setDesc(t('settingBackgroundDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableBackground)
 				.onChange(async (value) => {
@@ -712,8 +986,8 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('显示文末图标')
-			.setDesc('在批注文本末尾追加一个小的“📝”图标 (伪元素)。')
+			.setName(t('settingIconName'))
+			.setDesc(t('settingIconDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableIcon)
 				.onChange(async (value) => {
@@ -723,14 +997,14 @@ class AnnotationSettingTab extends PluginSettingTab {
 						iconTriggerSetting.setDisabled(!value);
 					}
 					await this.plugin.saveSettings();
-				}));
+			}));
 
 		iconTriggerSetting = new Setting(containerEl)
-			.setName('文末图标触发方式')
-			.setDesc('仅在“仅图标”模式下生效：选择悬浮图标自动弹出，或需点击图标后才显示批注。')
+			.setName(t('settingIconTriggerName'))
+			.setDesc(t('settingIconTriggerDesc'))
 			.addDropdown(dropdown => {
-				dropdown.addOption('hover', '移动到图标自动悬浮');
-				dropdown.addOption('click', '点击图标后再悬浮');
+				dropdown.addOption('hover', t('settingIconHover'));
+				dropdown.addOption('click', t('settingIconClick'));
 				dropdown.setValue(this.plugin.settings.iconTooltipTrigger)
 					.onChange(async (value) => {
 						const nextValue: IconTooltipTrigger = value === 'click' ? 'click' : 'hover';
@@ -741,8 +1015,8 @@ class AnnotationSettingTab extends PluginSettingTab {
 			.setDisabled(!this.plugin.settings.enableIcon);
 
 		new Setting(containerEl)
-			.setName('浅色模式不透明度')
-			.setDesc('调整 Light 主题下高亮背景的深浅 (0% - 100%)。')
+			.setName(t('settingLightOpacityName'))
+			.setDesc(t('settingLightOpacityDesc'))
 			.addSlider(slider => slider
 				.setLimits(0, 100, 5)
 				.setValue(this.plugin.settings.lightOpacity)
@@ -754,8 +1028,8 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('深色模式不透明度')
-			.setDesc('调整 Dark 主题下高亮背景的深浅 (0% - 100%)。')
+			.setName(t('settingDarkOpacityName'))
+			.setDesc(t('settingDarkOpacityDesc'))
 			.addSlider(slider => slider
 				.setLimits(0, 100, 5)
 				.setValue(this.plugin.settings.darkOpacity)
@@ -767,11 +1041,11 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 3. 交互体验 (Interaction)
-		containerEl.createEl('h2', { text: '交互体验 (Interaction)' });
+		containerEl.createEl('h2', { text: t('settingsInteraction') });
 
 		new Setting(containerEl)
-			.setName('Tooltip 最大宽度')
-			.setDesc('限制悬浮气泡的最大宽度 (px)。')
+			.setName(t('settingTooltipWidthName'))
+			.setDesc(t('settingTooltipWidthDesc'))
 			.addText(text => text
 				.setPlaceholder("800")
 				.setValue(this.plugin.settings.tooltipWidth.toString())
@@ -785,22 +1059,51 @@ class AnnotationSettingTab extends PluginSettingTab {
 					}
 				}));
 
-		new Setting(containerEl)
-			.setName('Tooltip 字体缩放')
-			.setDesc('调整气泡内文字的大小百分比 (100% 为默认)。')
-			.addSlider(slider => slider
-				.setLimits(50, 200, 10)
-				.setValue(this.plugin.settings.tooltipFontScale)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.tooltipFontScale = value;
-					this.plugin.updateStyles();
-					await this.plugin.saveSettings();
-				}));
+		// 调节字体大小：按档位增减，最多 ±3 档
+		const fontStepSize = 10; // 每档 10%
+		const fontStepMax = 3;
+		const clampStep = (val: number) => Math.min(Math.max(val, -fontStepMax), fontStepMax);
+		const getCurrentStep = () => {
+			const base = DEFAULT_SETTINGS.tooltipFontScale;
+			const current = this.plugin.settings.tooltipFontScale ?? base;
+			return clampStep(Math.round((current - base) / fontStepSize));
+		};
+		const formatStepLabel = (step: number) => {
+			if (step === 0) return t('settingFontStepDefault');
+			const abs = Math.abs(step);
+			if (abs === 1) return t('settingFontStep', step);
+			return t('settingFontStepPlural', step);
+		};
+
+		const fontSizeSetting = new Setting(containerEl).setName(t('settingFontAdjustName'));
+		fontSizeSetting.descEl.empty();
+		fontSizeSetting.descEl.createSpan({ text: t('settingFontAdjustDescPrefix') });
+		const fontStepLabelEl = fontSizeSetting.descEl.createSpan({ text: formatStepLabel(getCurrentStep()) });
+
+		const applyFontStep = async (delta: number) => {
+			const base = DEFAULT_SETTINGS.tooltipFontScale;
+			const nextStep = clampStep(getCurrentStep() + delta);
+			const nextScale = base + nextStep * fontStepSize;
+			this.plugin.settings.tooltipFontScale = nextScale;
+			this.plugin.updateStyles();
+			await this.plugin.saveSettings();
+			fontStepLabelEl.setText(formatStepLabel(nextStep));
+		};
+
+		fontSizeSetting.addButton(button => {
+			button.setButtonText(t('settingFontSmaller'));
+			button.onClick(async () => { await applyFontStep(-1); });
+		});
+
+		fontSizeSetting.addButton(button => {
+			button.setButtonText(t('settingFontLarger'));
+			button.setCta();
+			button.onClick(async () => { await applyFontStep(1); });
+		});
 
 		new Setting(containerEl)
-			.setName('启用 Markdown 渲染')
-			.setDesc('开启后，批注内容将支持 Markdown 语法（粗体、表格等）。关闭则显示纯文本源码。')
+			.setName(t('settingMarkdownName'))
+			.setDesc(t('settingMarkdownDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableMarkdown)
 				.onChange(async (value) => {
@@ -809,13 +1112,13 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 4. 高级与维护 (Advanced)
-		containerEl.createEl('h2', { text: '高级与维护 (Advanced)' });
+		containerEl.createEl('h2', { text: t('settingsAdvanced') });
 
 		new Setting(containerEl)
-			.setName('一键修复数据')
-			.setDesc('扫描库中所有文件，修复旧版批注的数据格式问题。')
+			.setName(t('settingFixDataName'))
+			.setDesc(t('settingFixDataDesc'))
 			.addButton(button => button
-				.setButtonText("开始扫描修复")
+				.setButtonText(t('settingFixDataButton'))
 				.onClick(async () => {
 					// 调用 plugin 中的方法
 					// @ts-ignore: private access
@@ -823,26 +1126,26 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 		
 		new Setting(containerEl)
-			.setName('导出所有批注 (当前文件)')
-			.setDesc('将当前文档中的所有批注提取到剪贴板。')
+			.setName(t('settingExportName'))
+			.setDesc(t('settingExportDesc'))
 			.addButton(button => button
-				.setButtonText("复制到剪贴板")
+				.setButtonText(t('settingExportButton'))
 				.onClick(async () => {
 					const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 					if (view) {
 						const text = view.editor.getValue();
 						const regex = /<span class="ob-comment(?:\s+[\w-]+)?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
 						let match;
-						let output = "## Annotations Export\n\n";
+						let output = this.plugin.t('exportHeading');
 						while ((match = regex.exec(text)) !== null) {
 							const note = decodeDataNote(match[1]);
 							const original = match[2];
-							output += `- **原文**: "${original}"\n  - **批注**: ${note}\n`;
+							output += `- **${this.plugin.t('exportOriginal')}**: "${original}"\n  - **${this.plugin.t('exportAnnotation')}**: ${note}\n`;
 						}
 						await navigator.clipboard.writeText(output);
-						new Notice("批注已复制到剪贴板！");
+						new Notice(this.plugin.t('noticeCopied'));
 					} else {
-						new Notice("请先打开一个 Markdown 文档");
+						new Notice(this.plugin.t('noticeOpenDoc'));
 					}
 				}));
 	}
@@ -856,19 +1159,28 @@ class AnnotationModal extends Modal {
 	selectedColor: AnnotationColor;
 	colorLabelEl: HTMLElement | null = null; // 显示当前选中的颜色名称
 	onSubmit: (result: string, color: AnnotationColor) => void;
+	locale: Locale;
+	translate: (key: LocaleKey, params?: any) => string;
 
-	constructor(app: App, defaultValue: string, defaultColor: AnnotationColor, onSubmit: (result: string, color: AnnotationColor) => void) {
+	constructor(app: App, defaultValue: string, defaultColor: AnnotationColor, onSubmit: (result: string, color: AnnotationColor) => void, locale: Locale, translate: (key: LocaleKey, params?: any) => string) {
 		super(app);
 		this.defaultValue = defaultValue;
 		this.defaultColor = defaultColor;
 		this.selectedColor = defaultColor || DEFAULT_COLOR; // 确保有选中值
 		this.onSubmit = onSubmit;
+		this.locale = locale;
+		this.translate = translate;
 		this.modalEl.addClass("ob-annotation-modal-container");
 	}
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.createEl("h2", { text: this.defaultValue ? "编辑批注" : "输入批注内容" });
+		const headerRow = contentEl.createDiv({ cls: "annotation-header-row" });
+		headerRow.createEl("h2", { text: this.defaultValue ? this.translate('modalTitleEdit') : this.translate('modalTitleNew') });
+		headerRow.createDiv({
+			cls: "annotation-key-hint",
+			text: this.translate('modalKeyHint')
+		});
 
 		const inputEl = contentEl.createEl("textarea", { 
 			cls: "annotation-input",
@@ -894,31 +1206,34 @@ class AnnotationModal extends Modal {
 
 		// --- 颜色选择区域 ---
 		const colorWrapper = contentEl.createDiv({ cls: "annotation-color-field" });
-		
-		const colorHeader = colorWrapper.createDiv({ 
+
+		const colorHeader = colorWrapper.createDiv({
 			cls: "setting-item-name", 
 			attr: { style: "margin-bottom: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;" } 
 		});
-		colorHeader.createSpan({ text: "批注颜色" });
+		colorHeader.createSpan({ text: this.translate('modalColorLabel') });
 		this.colorLabelEl = colorHeader.createSpan({ 
 			cls: "annotation-color-label", 
 			attr: { style: "font-weight: normal; font-size: 0.9em; color: var(--text-muted);" } 
 		});
-		
-		const colorContainer = colorWrapper.createDiv({ cls: "annotation-color-container" });
-		
+
+		const colorRow = colorWrapper.createDiv({ cls: "annotation-color-row" });
+		const colorContainer = colorRow.createDiv({ cls: "annotation-color-container" });
+		const btnContainer = colorRow.createDiv({ cls: "modal-button-container inline" });
+
 		// 渲染颜色选项圆点
 		COLOR_OPTIONS.forEach(opt => {
+			const colorLabel = this.translate(opt.labelKey);
 			const colorItem = colorContainer.createDiv({ 
 				cls: "annotation-color-item",
-				attr: { "aria-label": opt.label, "title": opt.label, "tabindex": "0" } // 支持键盘 Tab 聚焦
+				attr: { "aria-label": colorLabel, "title": colorLabel, "tabindex": "0" } // 支持键盘 Tab 聚焦
 			});
 			colorItem.style.backgroundColor = opt.hex;
 
 			// 检查是否为当前选中颜色
 			if (opt.value === this.selectedColor) {
 				colorItem.addClass("is-active");
-				this.updateColorLabel(opt.label);
+				this.updateColorLabel(colorLabel);
 			}
 
 			// 选中逻辑
@@ -929,7 +1244,7 @@ class AnnotationModal extends Modal {
 				colorItem.addClass("is-active");
 				// 更新状态
 				this.selectedColor = opt.value;
-				this.updateColorLabel(opt.label);
+				this.updateColorLabel(colorLabel);
 			};
 
 			// 鼠标点击
@@ -955,13 +1270,12 @@ class AnnotationModal extends Modal {
 			}
 		});
 
-		const btnContainer = contentEl.createDiv({ cls: "modal-button-container" });
 		// 取消按钮
-		const cancelBtn = btnContainer.createEl("button", { text: "取消" });
+		const cancelBtn = btnContainer.createEl("button", { text: this.translate('modalCancel') });
 		cancelBtn.addEventListener("click", () => this.close());
 
 		// 确定按钮
-		const submitBtn = btnContainer.createEl("button", { text: "确定", cls: "mod-cta" });
+		const submitBtn = btnContainer.createEl("button", { text: this.translate('modalConfirm'), cls: "mod-cta" });
 		submitBtn.addEventListener("click", () => {
 			this.submit(inputEl.value);
 		});
@@ -969,7 +1283,7 @@ class AnnotationModal extends Modal {
 
 	updateColorLabel(label: string) {
 		if (this.colorLabelEl) {
-			this.colorLabelEl.setText(label);
+			this.colorLabelEl.setText(`${this.translate('modalColorCurrent')}${label}`);
 		}
 	}
 
@@ -988,23 +1302,25 @@ class AnnotationModal extends Modal {
 class BatchFixConfirmModal extends Modal {
 	filesToFix: TFile[];
 	onConfirm: () => void;
+	translate: (key: LocaleKey, params?: any) => string;
 
-	constructor(app: App, filesToFix: TFile[], onConfirm: () => void) {
+	constructor(app: App, filesToFix: TFile[], onConfirm: () => void, translate: (key: LocaleKey, params?: any) => string) {
 		super(app);
 		this.filesToFix = filesToFix;
 		this.onConfirm = onConfirm;
+		this.translate = translate;
 	}
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.createEl("h2", { text: "⚠️ 批量修复确认" });
+		contentEl.createEl("h2", { text: this.translate('batchTitle') });
 
 		contentEl.createEl("p", { 
-			text: `扫描发现共有 ${this.filesToFix.length} 个文件包含旧格式或需要规范化的批注。` 
+			text: this.translate('batchSummary', this.filesToFix.length) 
 		});
 		
 		contentEl.createEl("p", { 
-			text: "执行修复将更新这些文件中的 HTML 结构（主要是 data-note 属性的安全转义）。建议在执行前对 Vault 进行备份。",
+			text: this.translate('batchWarning'),
 			cls: "mod-warning"
 		});
 
@@ -1012,10 +1328,10 @@ class BatchFixConfirmModal extends Modal {
 
 		const btnContainer = contentEl.createDiv({ cls: "modal-button-container", attr: { style: "display: flex; justify-content: flex-end; gap: 10px;" } });
 		
-		const cancelBtn = btnContainer.createEl("button", { text: "取消" });
+		const cancelBtn = btnContainer.createEl("button", { text: this.translate('batchCancel') });
 		cancelBtn.addEventListener("click", () => this.close());
 
-		const confirmBtn = btnContainer.createEl("button", { text: `确认修复 (${this.filesToFix.length} 个文件)`, cls: "mod-cta" });
+		const confirmBtn = btnContainer.createEl("button", { text: this.translate('batchConfirm', this.filesToFix.length), cls: "mod-cta" });
 		confirmBtn.addEventListener("click", () => {
 			this.close();
 			this.onConfirm();

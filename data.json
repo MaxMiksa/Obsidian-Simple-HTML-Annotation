@@ -1,13 +1,14 @@
 {
   "defaultColor": "",
   "hideAnnotations": false,
-  "enableUnderline": true,
+  "enableUnderline": false,
   "enableBackground": true,
   "enableIcon": false,
-  "iconTooltipTrigger": "hover",
+  "iconTooltipTrigger": "click",
   "lightOpacity": 20,
   "darkOpacity": 25,
   "tooltipWidth": 800,
   "tooltipFontScale": 100,
-  "enableMarkdown": true
+  "enableMarkdown": true,
+  "language": "zh"
 }
