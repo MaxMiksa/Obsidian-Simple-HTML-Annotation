@@ -76,15 +76,15 @@ var STRINGS = {
     modalCancel: "Cancel",
     modalConfirm: "Confirm",
     modalColorCurrent: "Current color: ",
-    batchTitle: "\u26A0\uFE0F Batch Fix Confirmation",
+    batchTitle: "\u26A0\uFE0F Batch fix confirmation",
     batchSummary: (count) => `Found ${count} file(s) with legacy or unsafe annotations.`,
-    batchWarning: "Fixing will update HTML (data-note escaping). Please backup your vault first.",
+    batchWarning: "Fixing will update HTML (data-note escaping). Please back up your vault first.",
     batchConfirm: (count) => `Confirm fix (${count} files)`,
     batchCancel: "Cancel",
-    settingsGeneral: "General Settings",
+    settingsGeneral: "General settings",
     settingsAppearance: "Appearance",
     settingsInteraction: "Interaction",
-    settingsAdvanced: "Advanced & Maintenance",
+    settingsAdvanced: "Advanced & maintenance",
     settingDefaultColorName: "Default annotation color",
     settingDefaultColorDesc: "Initial color when creating a new annotation.",
     settingHideDefaultName: "Hide annotations by default",
@@ -100,9 +100,9 @@ var STRINGS = {
     settingIconHover: "Hover to show",
     settingIconClick: "Click to show",
     settingLightOpacityName: "Light theme opacity",
-    settingLightOpacityDesc: "Adjust highlight depth for Light themes (0% - 100%).",
+    settingLightOpacityDesc: "Adjust highlight depth for light themes (0% - 100%).",
     settingDarkOpacityName: "Dark theme opacity",
-    settingDarkOpacityDesc: "Adjust highlight depth for Dark themes (0% - 100%).",
+    settingDarkOpacityDesc: "Adjust highlight depth for dark themes (0% - 100%).",
     settingTooltipWidthName: "Tooltip max width",
     settingTooltipWidthDesc: "Limit tooltip width (px).",
     settingFontAdjustName: "Adjust font size",
@@ -170,7 +170,7 @@ var STRINGS = {
     modalColorCurrent: "\u5F53\u524D\u989C\u8272\uFF1A",
     batchTitle: "\u26A0\uFE0F \u6279\u91CF\u4FEE\u590D\u786E\u8BA4",
     batchSummary: (count) => `\u626B\u63CF\u53D1\u73B0\u5171\u6709 ${count} \u4E2A\u6587\u4EF6\u5305\u542B\u65E7\u683C\u5F0F\u6216\u9700\u8981\u89C4\u8303\u5316\u7684\u6279\u6CE8\u3002`,
-    batchWarning: "\u6267\u884C\u4FEE\u590D\u5C06\u66F4\u65B0\u8FD9\u4E9B\u6587\u4EF6\u4E2D\u7684 HTML \u7ED3\u6784\uFF08\u4E3B\u8981\u662F data-note \u7684\u5B89\u5168\u8F6C\u4E49\uFF09\u3002\u5EFA\u8BAE\u5148\u5907\u4EFD Vault\u3002",
+    batchWarning: "\u6267\u884C\u4FEE\u590D\u5C06\u66F4\u65B0\u8FD9\u4E9B\u6587\u4EF6\u4E2D\u7684 HTML \u7ED3\u6784\uFF08\u4E3B\u8981\u662F data-note \u7684\u5B89\u5168\u8F6C\u4E49\uFF09\u3002\u5EFA\u8BAE\u5148\u5907\u4EFD\u4F60\u7684 vault\u3002",
     batchConfirm: (count) => `\u786E\u8BA4\u4FEE\u590D\uFF08${count} \u4E2A\u6587\u4EF6\uFF09`,
     batchCancel: "\u53D6\u6D88",
     settingsGeneral: "\u57FA\u7840\u8BBE\u7F6E",
@@ -192,9 +192,9 @@ var STRINGS = {
     settingIconHover: "\u79FB\u52A8\u5230\u56FE\u6807\u81EA\u52A8\u60AC\u6D6E",
     settingIconClick: "\u70B9\u51FB\u56FE\u6807\u540E\u518D\u60AC\u6D6E",
     settingLightOpacityName: "\u6D45\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6",
-    settingLightOpacityDesc: "\u8C03\u6574 Light \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
+    settingLightOpacityDesc: "\u8C03\u6574\u6D45\u8272\u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
     settingDarkOpacityName: "\u6DF1\u8272\u6A21\u5F0F\u4E0D\u900F\u660E\u5EA6",
-    settingDarkOpacityDesc: "\u8C03\u6574 Dark \u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
+    settingDarkOpacityDesc: "\u8C03\u6574\u6DF1\u8272\u4E3B\u9898\u4E0B\u9AD8\u4EAE\u80CC\u666F\u7684\u6DF1\u6D45 (0% - 100%)\u3002",
     settingTooltipWidthName: "Tooltip \u6700\u5927\u5BBD\u5EA6",
     settingTooltipWidthDesc: "\u9650\u5236\u60AC\u6D6E\u6C14\u6CE1\u7684\u6700\u5927\u5BBD\u5EA6 (px)\u3002",
     settingFontAdjustName: "\u8C03\u8282\u5B57\u4F53\u5927\u5C0F",
@@ -276,6 +276,9 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
   constructor() {
     super(...arguments);
     this.tooltipEl = null;
+    this.tooltipRenderComponent = null;
+    this.tooltipRenderId = 0;
+    this.tooltipLastRenderKey = null;
     this.locale = "en";
   }
   // 记忆上次使用的颜色
@@ -373,8 +376,8 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     this.addCommand({
       id: "normalize-annotation-data-note-current",
       name: this.t("cmdNormalizeCurrent"),
-      editorCallback: async (editor) => {
-        await this.normalizeCurrentFileAnnotations(editor);
+      editorCallback: (editor) => {
+        this.normalizeCurrentFileAnnotations(editor);
       }
     });
     this.addCommand({
@@ -445,6 +448,7 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     );
   }
   onunload() {
+    this.unloadTooltipRenderComponent();
     if (this.tooltipEl) {
       this.tooltipEl.remove();
     }
@@ -560,20 +564,20 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
         });
       });
       menu.addItem((item) => {
+        var _a;
         item.setTitle(this.t("ctxChangeColor")).setIcon("palette");
-        if (item.setSubmenu) {
-          const subMenu = item.setSubmenu();
-          COLOR_OPTIONS.forEach((opt) => {
-            const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
-            const colorLabel = this.getColorLabel(opt.labelKey);
-            subMenu.addItem((subItem) => {
-              subItem.setTitle(colorLabel).setIcon(iconId).onClick(() => {
-                const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
-                editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
-              });
+        const subMenu = (_a = item.setSubmenu) == null ? void 0 : _a.call(item);
+        if (!subMenu) return;
+        COLOR_OPTIONS.forEach((opt) => {
+          const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+          const colorLabel = this.getColorLabel(opt.labelKey);
+          subMenu.addItem((subItem) => {
+            subItem.setTitle(colorLabel).setIcon(iconId).onClick(() => {
+              const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
+              editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
             });
           });
-        }
+        });
       });
       menu.addItem((item) => {
         item.setTitle(this.t("ctxDelete")).setIcon("trash").onClick(() => {
@@ -649,37 +653,64 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
     }
     return null;
   }
-  // --- Tooltip 相关逻辑 (保持不变) ---
+  // --- Tooltip 相关逻辑 ---
   createTooltipElement() {
     this.tooltipEl = document.body.createDiv({ cls: "ob-annotation-tooltip" });
   }
-  showTooltip(evt, text) {
+  unloadTooltipRenderComponent() {
     var _a;
+    (_a = this.tooltipRenderComponent) == null ? void 0 : _a.unload();
+    this.tooltipRenderComponent = null;
+  }
+  updateTooltipPosition(evt) {
     if (!this.tooltipEl) return;
-    this.tooltipEl.empty();
-    const decodedText = decodeDataNote(text);
-    const sourcePath = ((_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path) || "";
-    if (this.settings.enableMarkdown) {
-      import_obsidian.MarkdownRenderer.render(this.app, decodedText, this.tooltipEl, sourcePath, this);
-    } else {
-      const pre = this.tooltipEl.createEl("pre", { text: decodedText });
-      pre.style.margin = "0";
-      pre.style.whiteSpace = "pre-wrap";
-    }
-    this.tooltipEl.addClass("is-visible");
     const x = evt.pageX;
     const y = evt.pageY - 40;
     this.tooltipEl.style.left = `${x}px`;
     this.tooltipEl.style.top = `${y}px`;
   }
+  showTooltip(evt, text) {
+    var _a;
+    if (!this.tooltipEl) return;
+    this.tooltipEl.addClass("is-visible");
+    this.updateTooltipPosition(evt);
+    const decodedText = decodeDataNote(text);
+    const sourcePath = ((_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path) || "";
+    const renderKey = `${this.settings.enableMarkdown ? "md" : "text"}|${sourcePath}|${decodedText}`;
+    if (renderKey === this.tooltipLastRenderKey) return;
+    this.tooltipLastRenderKey = renderKey;
+    this.tooltipEl.empty();
+    this.unloadTooltipRenderComponent();
+    if (this.settings.enableMarkdown) {
+      const renderId = ++this.tooltipRenderId;
+      const component = new import_obsidian.Component();
+      component.load();
+      this.tooltipRenderComponent = component;
+      const renderContainer = document.createElement("div");
+      void import_obsidian.MarkdownRenderer.render(this.app, decodedText, renderContainer, sourcePath, component).then(() => {
+        if (!this.tooltipEl) return;
+        if (renderId !== this.tooltipRenderId) return;
+        this.tooltipEl.empty();
+        this.tooltipEl.appendChild(renderContainer);
+      }).catch((err) => {
+        console.error("[hover-annotations] Failed to render tooltip markdown", err);
+      });
+    } else {
+      this.tooltipEl.createEl("pre", { text: decodedText, cls: "ob-annotation-tooltip-plain" });
+    }
+  }
   hideTooltip() {
     if (!this.tooltipEl) return;
     this.tooltipEl.removeClass("is-visible");
+    this.tooltipRenderId++;
+    this.tooltipLastRenderKey = null;
+    this.unloadTooltipRenderComponent();
+    this.tooltipEl.empty();
   }
   /**
    * 修复当前文件中所有批注的 data-note（处理旧版直接换行/特殊字符未转义的情况）
    */
-  async normalizeCurrentFileAnnotations(editor) {
+  normalizeCurrentFileAnnotations(editor) {
     const docText = editor.getValue();
     const { text, changed } = normalizeAnnotationsInText(docText);
     if (!changed) {
@@ -711,18 +742,21 @@ var _AnnotationPlugin = class _AnnotationPlugin extends import_obsidian.Plugin {
       new import_obsidian.Notice(this.t("noticeNoFixNeeded"));
       return;
     }
-    new BatchFixConfirmModal(this.app, filesToFix, async () => {
-      let fixedCount = 0;
-      for (const file of filesToFix) {
-        const original = await this.app.vault.read(file);
-        const { text, changed } = normalizeAnnotationsInText(original);
-        if (changed) {
-          await this.app.vault.modify(file, text);
-          fixedCount++;
-        }
-      }
-      new import_obsidian.Notice(this.t("noticeFixedVault", fixedCount));
+    new BatchFixConfirmModal(this.app, filesToFix, () => {
+      void this.applyNormalizationToFiles(filesToFix);
     }, this.t.bind(this)).open();
+  }
+  async applyNormalizationToFiles(filesToFix) {
+    let fixedCount = 0;
+    for (const file of filesToFix) {
+      const original = await this.app.vault.read(file);
+      const { text, changed } = normalizeAnnotationsInText(original);
+      if (changed) {
+        await this.app.vault.modify(file, text);
+        fixedCount++;
+      }
+    }
+    new import_obsidian.Notice(this.t("noticeFixedVault", fixedCount));
   }
 };
 _AnnotationPlugin.lastUsedColor = DEFAULT_COLOR;
@@ -737,7 +771,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
     containerEl.empty();
     let iconTriggerSetting = null;
     const t = this.plugin.t.bind(this.plugin);
-    containerEl.createEl("h2", { text: t("settingsGeneral") });
+    new import_obsidian.Setting(containerEl).setName(t("settingsGeneral")).setHeading();
     new import_obsidian.Setting(containerEl).setName(t("settingLanguageName")).setDesc(t("settingLanguageDesc")).addDropdown((dropdown) => {
       var _a;
       dropdown.addOption("en", t("settingLanguageEn"));
@@ -766,7 +800,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: t("settingsAppearance") });
+    new import_obsidian.Setting(containerEl).setName(t("settingsAppearance")).setHeading();
     new import_obsidian.Setting(containerEl).setName(t("settingUnderlineName")).setDesc(t("settingUnderlineDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableUnderline).onChange(async (value) => {
       this.plugin.settings.enableUnderline = value;
       this.plugin.updateStyles();
@@ -780,9 +814,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName(t("settingIconName")).setDesc(t("settingIconDesc")).addToggle((toggle) => toggle.setValue(this.plugin.settings.enableIcon).onChange(async (value) => {
       this.plugin.settings.enableIcon = value;
       this.plugin.updateStyles();
-      if (iconTriggerSetting) {
-        iconTriggerSetting.setDisabled(!value);
-      }
+      iconTriggerSetting == null ? void 0 : iconTriggerSetting.setDisabled(!value);
       await this.plugin.saveSettings();
     }));
     iconTriggerSetting = new import_obsidian.Setting(containerEl).setName(t("settingIconTriggerName")).setDesc(t("settingIconTriggerDesc")).addDropdown((dropdown) => {
@@ -804,7 +836,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
       this.plugin.updateStyles();
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: t("settingsInteraction") });
+    new import_obsidian.Setting(containerEl).setName(t("settingsInteraction")).setHeading();
     new import_obsidian.Setting(containerEl).setName(t("settingTooltipWidthName")).setDesc(t("settingTooltipWidthDesc")).addText((text) => text.setPlaceholder("800").setValue(this.plugin.settings.tooltipWidth.toString()).onChange(async (value) => {
       const num = parseInt(value);
       if (!isNaN(num)) {
@@ -858,7 +890,7 @@ var AnnotationSettingTab = class extends import_obsidian.PluginSettingTab {
       this.plugin.settings.enableMarkdown = value;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h2", { text: t("settingsAdvanced") });
+    new import_obsidian.Setting(containerEl).setName(t("settingsAdvanced")).setHeading();
     new import_obsidian.Setting(containerEl).setName(t("settingFixDataName")).setDesc(t("settingFixDataDesc")).addButton((button) => button.setButtonText(t("settingFixDataButton")).onClick(async () => {
       await this.plugin.normalizeAllMarkdownFiles();
     }));
@@ -906,11 +938,11 @@ var AnnotationModal = class extends import_obsidian.Modal {
     });
     const inputEl = contentEl.createEl("textarea", {
       cls: "annotation-input",
-      attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" }
+      attr: { rows: "3" }
     });
     const adjustHeight = () => {
-      inputEl.style.height = "auto";
-      inputEl.style.height = inputEl.scrollHeight + "px";
+      inputEl.setCssProps({ height: "auto" });
+      inputEl.setCssProps({ height: inputEl.scrollHeight + "px" });
     };
     inputEl.addEventListener("input", adjustHeight);
     inputEl.value = this.defaultValue;

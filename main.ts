@@ -1,9 +1,10 @@
-﻿import { App, Editor, MarkdownView, Modal, Plugin, Menu, Notice, addIcon, MarkdownRenderer, TFile, PluginSettingTab, Setting } from 'obsidian';
+﻿import { App, Component, Editor, MarkdownView, Modal, Plugin, Menu, MenuItem, Notice, addIcon, MarkdownRenderer, TFile, PluginSettingTab, Setting } from 'obsidian';
 import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
 type AnnotationColor = string;
 type IconTooltipTrigger = 'hover' | 'click';
+type SubmenuCapableMenuItem = MenuItem & { setSubmenu?: () => Menu };
 
 // 定义 HTML 标签的正则结构 (支持多行 + 颜色 class)
 const COMMENT_REGEX = /<span class="ob-comment(?:\s+([\w-]+))?" data-note="([\s\S]*?)">([\s\S]*?)<\/span>/g;
@@ -62,16 +63,16 @@ const STRINGS = {
 		modalConfirm: "Confirm",
 		modalColorCurrent: "Current color: ",
 
-		batchTitle: "⚠️ Batch Fix Confirmation",
-		batchSummary: (count: number) => `Found ${count} file(s) with legacy or unsafe annotations.`,
-		batchWarning: "Fixing will update HTML (data-note escaping). Please backup your vault first.",
+			batchTitle: "⚠️ Batch fix confirmation",
+			batchSummary: (count: number) => `Found ${count} file(s) with legacy or unsafe annotations.`,
+			batchWarning: "Fixing will update HTML (data-note escaping). Please back up your vault first.",
 		batchConfirm: (count: number) => `Confirm fix (${count} files)`,
 		batchCancel: "Cancel",
 
-		settingsGeneral: "General Settings",
-		settingsAppearance: "Appearance",
-		settingsInteraction: "Interaction",
-		settingsAdvanced: "Advanced & Maintenance",
+			settingsGeneral: "General settings",
+			settingsAppearance: "Appearance",
+			settingsInteraction: "Interaction",
+			settingsAdvanced: "Advanced & maintenance",
 
 		settingDefaultColorName: "Default annotation color",
 		settingDefaultColorDesc: "Initial color when creating a new annotation.",
@@ -88,9 +89,9 @@ const STRINGS = {
 		settingIconHover: "Hover to show",
 		settingIconClick: "Click to show",
 		settingLightOpacityName: "Light theme opacity",
-		settingLightOpacityDesc: "Adjust highlight depth for Light themes (0% - 100%).",
-		settingDarkOpacityName: "Dark theme opacity",
-		settingDarkOpacityDesc: "Adjust highlight depth for Dark themes (0% - 100%).",
+			settingLightOpacityDesc: "Adjust highlight depth for light themes (0% - 100%).",
+			settingDarkOpacityName: "Dark theme opacity",
+			settingDarkOpacityDesc: "Adjust highlight depth for dark themes (0% - 100%).",
 		settingTooltipWidthName: "Tooltip max width",
 		settingTooltipWidthDesc: "Limit tooltip width (px).",
 		settingFontAdjustName: "Adjust font size",
@@ -166,7 +167,7 @@ const STRINGS = {
 
 		batchTitle: "⚠️ 批量修复确认",
 		batchSummary: (count: number) => `扫描发现共有 ${count} 个文件包含旧格式或需要规范化的批注。`,
-		batchWarning: "执行修复将更新这些文件中的 HTML 结构（主要是 data-note 的安全转义）。建议先备份 Vault。",
+			batchWarning: "执行修复将更新这些文件中的 HTML 结构（主要是 data-note 的安全转义）。建议先备份你的 vault。",
 		batchConfirm: (count: number) => `确认修复（${count} 个文件）`,
 		batchCancel: "取消",
 
@@ -190,9 +191,9 @@ const STRINGS = {
 		settingIconHover: "移动到图标自动悬浮",
 		settingIconClick: "点击图标后再悬浮",
 		settingLightOpacityName: "浅色模式不透明度",
-		settingLightOpacityDesc: "调整 Light 主题下高亮背景的深浅 (0% - 100%)。",
-		settingDarkOpacityName: "深色模式不透明度",
-		settingDarkOpacityDesc: "调整 Dark 主题下高亮背景的深浅 (0% - 100%)。",
+			settingLightOpacityDesc: "调整浅色主题下高亮背景的深浅 (0% - 100%)。",
+			settingDarkOpacityName: "深色模式不透明度",
+			settingDarkOpacityDesc: "调整深色主题下高亮背景的深浅 (0% - 100%)。",
 		settingTooltipWidthName: "Tooltip 最大宽度",
 		settingTooltipWidthDesc: "限制悬浮气泡的最大宽度 (px)。",
 		settingFontAdjustName: "调节字体大小",
@@ -320,10 +321,13 @@ function normalizeAnnotationsInText(text: string): { text: string; changed: bool
 }
 
 export default class AnnotationPlugin extends Plugin {
-	settings: SimpleHTMLAnnotationSettings;
-	tooltipEl: HTMLElement | null = null;
-	locale: Locale = 'en';
-	static lastUsedColor: AnnotationColor = DEFAULT_COLOR; // 记忆上次使用的颜色
+  settings: SimpleHTMLAnnotationSettings;
+  tooltipEl: HTMLElement | null = null;
+  private tooltipRenderComponent: Component | null = null;
+  private tooltipRenderId = 0;
+  private tooltipLastRenderKey: string | null = null;
+  locale: Locale = 'en';
+  static lastUsedColor: AnnotationColor = DEFAULT_COLOR; // 记忆上次使用的颜色
 
 	t(key: LocaleKey, params?: any): string {
 		const entry = STRINGS[this.locale][key];
@@ -441,13 +445,13 @@ export default class AnnotationPlugin extends Plugin {
 		});
 
 		// 修复当前文件的批注 data-note 格式
-		this.addCommand({
-			id: 'normalize-annotation-data-note-current',
-			name: this.t('cmdNormalizeCurrent'),
-			editorCallback: async (editor: Editor) => {
-				await this.normalizeCurrentFileAnnotations(editor);
-			}
-		});
+	this.addCommand({
+		id: 'normalize-annotation-data-note-current',
+		name: this.t('cmdNormalizeCurrent'),
+		editorCallback: (editor: Editor) => {
+			this.normalizeCurrentFileAnnotations(editor);
+		}
+	});
 
 		// 修复全库所有 Markdown 文件的批注 data-note
 		this.addCommand({
@@ -469,12 +473,12 @@ export default class AnnotationPlugin extends Plugin {
 			// 如果隐藏模式开启，不显示 tooltip
 			if (document.body.classList.contains('ob-hide-annotations')) return;
 
-			const target = evt.target as HTMLElement;
-			if (this.shouldShowTooltipOnHover(evt, target)) {
-				const note = target.getAttribute('data-note');
-				if (note) this.showTooltip(evt, note);
-			}
-		});
+                   const target = evt.target as HTMLElement;
+                   if (this.shouldShowTooltipOnHover(evt, target)) {       
+                           const note = target.getAttribute('data-note');  
+							if (note) this.showTooltip(evt, note);
+                   }
+           });
 
 		// 仅图标模式 + 悬浮触发时，需要跟踪鼠标移动以确保只有在图标区域才显示
 		this.registerDomEvent(document, 'mousemove', (evt: MouseEvent) => {
@@ -484,14 +488,14 @@ export default class AnnotationPlugin extends Plugin {
 
 			const target = evt.target as HTMLElement;
 			if (target && target.hasClass && target.hasClass('ob-comment')) {
-				const note = target.getAttribute('data-note');
-				if (note && this.isEventOnIcon(evt, target)) {
-					this.showTooltip(evt, note);
-					return;
-				}
-			}
-			this.hideTooltip();
-		});
+                           const note = target.getAttribute('data-note');  
+                           if (note && this.isEventOnIcon(evt, target)) {  
+									this.showTooltip(evt, note);
+                                   return;
+                           }
+                   }
+                   this.hideTooltip();
+           });
 
 		this.registerDomEvent(document, 'mouseout', (evt: MouseEvent) => {
 			const target = evt.target as HTMLElement;
@@ -506,13 +510,13 @@ export default class AnnotationPlugin extends Plugin {
 			
 			const target = evt.target as HTMLElement;
 			if (target && target.hasClass && target.hasClass('ob-comment')) {
-				if (this.shouldShowTooltipOnClick(evt, target)) {
-					const note = target.getAttribute('data-note');
-					if (note) this.showTooltip(evt, note);
-				}
-			} else {
-				// 点击空白处隐藏 (仅当不是 tooltip 本身)
-				if (this.tooltipEl && !this.tooltipEl.contains(target)) {
+                           if (this.shouldShowTooltipOnClick(evt, target)) {
+                                   const note = target.getAttribute('data-note');
+									if (note) this.showTooltip(evt, note);
+                           }
+                   } else {
+                           // 点击空白处隐藏 (仅当不是 tooltip 本身)       
+                           if (this.tooltipEl && !this.tooltipEl.contains(target)) {
 					this.hideTooltip();
 				}
 			}
@@ -538,11 +542,12 @@ export default class AnnotationPlugin extends Plugin {
 		);
 	}
 
-	onunload() {
-		if (this.tooltipEl) {
-			this.tooltipEl.remove();
-		}
-		document.body.classList.remove('ob-show-underline', 'ob-show-background', 'ob-show-icon', 'ob-hide-annotations', 'ob-icon-only-mode');
+  onunload() {
+          this.unloadTooltipRenderComponent();
+          if (this.tooltipEl) {
+                  this.tooltipEl.remove();
+          }
+          document.body.classList.remove('ob-show-underline', 'ob-show-background', 'ob-show-icon', 'ob-hide-annotations', 'ob-icon-only-mode');
 		const rootStyle = document.documentElement.style;
 		rootStyle.removeProperty('--ob-annotation-bg-opacity-light');
 		rootStyle.removeProperty('--ob-annotation-bg-opacity-dark');
@@ -684,30 +689,29 @@ export default class AnnotationPlugin extends Plugin {
 					});
 			});
 
-			// 3. 修改颜色 (子菜单)
-			menu.addItem((item) => {
-				item.setTitle(this.t('ctxChangeColor')).setIcon("palette");
-				// @ts-ignore
-				if (item.setSubmenu) {
-					const subMenu = item.setSubmenu();
+				// 3. 修改颜色 (子菜单)
+				menu.addItem((item) => {
+					item.setTitle(this.t('ctxChangeColor')).setIcon("palette");
+					const subMenu = (item as SubmenuCapableMenuItem).setSubmenu?.();
+					if (!subMenu) return;
+
 					COLOR_OPTIONS.forEach(opt => {
-						const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
-						const colorLabel = this.getColorLabel(opt.labelKey);
-						subMenu.addItem((subItem: any) => {
-							subItem.setTitle(colorLabel)
-								   .setIcon(iconId) // 使用注册的彩色图标
-								   .onClick(() => {
+							const iconId = opt.value ? `ob-annotation-icon-${opt.value}` : `ob-annotation-icon-default`;
+							const colorLabel = this.getColorLabel(opt.labelKey);
+                                           subMenu.addItem((subItem: MenuItem) => {
+                                                   subItem.setTitle(colorLabel)
+                                                              .setIcon(iconId) // 使用注册的彩色图标
+                                                              .onClick(() => {
 									   // 直接修改颜色
 									   const replacement = `<span class="${buildAnnotationClass(opt.value)}" data-note="${escapeDataNote(existingAnnotation.note)}">${existingAnnotation.text}</span>`;
 									   editor.replaceRange(replacement, existingAnnotation.from, existingAnnotation.to);
 								   });
 						});
+						});
 					});
-				}
-			});
 
-			// 4. 删除批注
-			menu.addItem((item) => {
+					// 4. 删除批注
+					menu.addItem((item) => {
 				item
 					.setTitle(this.t('ctxDelete'))
 					.setIcon("trash")
@@ -804,44 +808,81 @@ export default class AnnotationPlugin extends Plugin {
 		return null;
 	}
 
-	// --- Tooltip 相关逻辑 (保持不变) ---
+	// --- Tooltip 相关逻辑 ---
 	createTooltipElement() {
 		this.tooltipEl = document.body.createDiv({ cls: 'ob-annotation-tooltip' });
 	}
 
-	showTooltip(evt: MouseEvent, text: string) {
-		if (!this.tooltipEl) return;
-		
-		this.tooltipEl.empty();
-		// 解码 text 中的 HTML 实体（如 &#10; -> \n），确保 Markdown 表格等语法能正确识别换行
-		const decodedText = decodeDataNote(text);
-		// 使用当前激活文件的路径作为 sourcePath，以支持相对路径链接等
-		const sourcePath = this.app.workspace.getActiveFile()?.path || "";
-		if (this.settings.enableMarkdown) {
-			MarkdownRenderer.render(this.app, decodedText, this.tooltipEl, sourcePath, this);
-		} else {
-			// 关闭 Markdown 渲染时，直接显示纯文本
-			const pre = this.tooltipEl.createEl("pre", { text: decodedText });
-			pre.style.margin = "0";
-			pre.style.whiteSpace = "pre-wrap";
-		}
+	private unloadTooltipRenderComponent() {
+		this.tooltipRenderComponent?.unload();
+		this.tooltipRenderComponent = null;
+	}
 
-		this.tooltipEl.addClass('is-visible');
+	private updateTooltipPosition(evt: MouseEvent) {
+		if (!this.tooltipEl) return;
+
 		const x = evt.pageX;
 		const y = evt.pageY - 40;
 		this.tooltipEl.style.left = `${x}px`;
 		this.tooltipEl.style.top = `${y}px`;
 	}
 
+	showTooltip(evt: MouseEvent, text: string) {
+		if (!this.tooltipEl) return;
+		
+		this.tooltipEl.addClass('is-visible');
+		this.updateTooltipPosition(evt);
+
+		// tooltip content is rendered below (after renderKey check)
+		// 解码 text 中的 HTML 实体（如 &#10; -> \n），确保 Markdown 表格等语法能正确识别换行
+		const decodedText = decodeDataNote(text);
+		// 使用当前激活文件的路径作为 sourcePath，以支持相对路径链接等
+		const sourcePath = this.app.workspace.getActiveFile()?.path || "";
+		const renderKey = `${this.settings.enableMarkdown ? "md" : "text"}|${sourcePath}|${decodedText}`;
+		if (renderKey === this.tooltipLastRenderKey) return;
+		this.tooltipLastRenderKey = renderKey;
+
+		this.tooltipEl.empty();
+		this.unloadTooltipRenderComponent();
+
+		if (this.settings.enableMarkdown) {
+			const renderId = ++this.tooltipRenderId;
+			const component = new Component();
+			component.load();
+			this.tooltipRenderComponent = component;
+
+			const renderContainer = document.createElement('div');
+			void MarkdownRenderer.render(this.app, decodedText, renderContainer, sourcePath, component)
+				.then(() => {
+					if (!this.tooltipEl) return;
+					if (renderId !== this.tooltipRenderId) return;
+					this.tooltipEl.empty();
+					this.tooltipEl.appendChild(renderContainer);
+				})
+				.catch((err) => {
+					console.error('[hover-annotations] Failed to render tooltip markdown', err);
+				});
+		} else {
+			// 关闭 Markdown 渲染时，直接显示纯文本
+			this.tooltipEl.createEl("pre", { text: decodedText, cls: "ob-annotation-tooltip-plain" });
+		}
+
+	}
+
 	hideTooltip() {
 		if (!this.tooltipEl) return;
 		this.tooltipEl.removeClass('is-visible');
+
+		this.tooltipRenderId++;
+		this.tooltipLastRenderKey = null;
+		this.unloadTooltipRenderComponent();
+		this.tooltipEl.empty();
 	}
 
 	/**
 	 * 修复当前文件中所有批注的 data-note（处理旧版直接换行/特殊字符未转义的情况）
 	 */
-	private async normalizeCurrentFileAnnotations(editor: Editor) {
+	private normalizeCurrentFileAnnotations(editor: Editor) {
 		const docText = editor.getValue();
 		const { text, changed } = normalizeAnnotationsInText(docText);
 
@@ -884,19 +925,23 @@ export default class AnnotationPlugin extends Plugin {
 		}
 
 		// 2. 确认阶段
-		new BatchFixConfirmModal(this.app, filesToFix, async () => {
-			let fixedCount = 0;
-			// 3. 执行阶段
-			for (const file of filesToFix) {
-				const original = await this.app.vault.read(file);
-				const { text, changed } = normalizeAnnotationsInText(original);
-				if (changed) {
-					await this.app.vault.modify(file, text);
-					fixedCount++;
-				}
-			}
-			new Notice(this.t('noticeFixedVault', fixedCount));
+		new BatchFixConfirmModal(this.app, filesToFix, () => {
+			void this.applyNormalizationToFiles(filesToFix);
 		}, this.t.bind(this)).open();
+	}
+
+	private async applyNormalizationToFiles(filesToFix: TFile[]) {
+		let fixedCount = 0;
+		// 3. 执行阶段
+		for (const file of filesToFix) {
+			const original = await this.app.vault.read(file);
+			const { text, changed } = normalizeAnnotationsInText(original);
+			if (changed) {
+				await this.app.vault.modify(file, text);
+				fixedCount++;
+			}
+		}
+		new Notice(this.t('noticeFixedVault', fixedCount));
 	}
 }
 
@@ -915,7 +960,7 @@ class AnnotationSettingTab extends PluginSettingTab {
 		const t = this.plugin.t.bind(this.plugin);
 
 		// 1. 基础设置 (General Settings)
-		containerEl.createEl('h2', { text: t('settingsGeneral') });
+		new Setting(containerEl).setName(t('settingsGeneral')).setHeading();
 
 		new Setting(containerEl)
 			.setName(t('settingLanguageName'))
@@ -961,7 +1006,7 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 2. 外观样式 (Appearance)
-		containerEl.createEl('h2', { text: t('settingsAppearance') });
+		new Setting(containerEl).setName(t('settingsAppearance')).setHeading();
 
 		new Setting(containerEl)
 			.setName(t('settingUnderlineName'))
@@ -990,14 +1035,12 @@ class AnnotationSettingTab extends PluginSettingTab {
 			.setDesc(t('settingIconDesc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableIcon)
-				.onChange(async (value) => {
-					this.plugin.settings.enableIcon = value;
-					this.plugin.updateStyles();
-					if (iconTriggerSetting) {
-						iconTriggerSetting.setDisabled(!value);
-					}
-					await this.plugin.saveSettings();
-			}));
+					.onChange(async (value) => {
+						this.plugin.settings.enableIcon = value;
+						this.plugin.updateStyles();
+						iconTriggerSetting?.setDisabled(!value);
+						await this.plugin.saveSettings();
+					}));
 
 		iconTriggerSetting = new Setting(containerEl)
 			.setName(t('settingIconTriggerName'))
@@ -1041,7 +1084,7 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 3. 交互体验 (Interaction)
-		containerEl.createEl('h2', { text: t('settingsInteraction') });
+		new Setting(containerEl).setName(t('settingsInteraction')).setHeading();
 
 		new Setting(containerEl)
 			.setName(t('settingTooltipWidthName'))
@@ -1112,7 +1155,7 @@ class AnnotationSettingTab extends PluginSettingTab {
 				}));
 
 		// 4. 高级与维护 (Advanced)
-		containerEl.createEl('h2', { text: t('settingsAdvanced') });
+		new Setting(containerEl).setName(t('settingsAdvanced')).setHeading();
 
 		new Setting(containerEl)
 			.setName(t('settingFixDataName'))
@@ -1182,15 +1225,15 @@ class AnnotationModal extends Modal {
 			text: this.translate('modalKeyHint')
 		});
 
-		const inputEl = contentEl.createEl("textarea", { 
+		const inputEl = contentEl.createEl("textarea", {
 			cls: "annotation-input",
-			attr: { rows: "3", style: "width: 100%; margin-bottom: 10px;" } 
+			attr: { rows: "3" }
 		});
-		
+
 		// Auto-resize logic
 		const adjustHeight = () => {
-			inputEl.style.height = 'auto';
-			inputEl.style.height = inputEl.scrollHeight + 'px';
+			inputEl.setCssProps({ height: 'auto' });
+			inputEl.setCssProps({ height: inputEl.scrollHeight + 'px' });
 		};
 		inputEl.addEventListener('input', adjustHeight);
 

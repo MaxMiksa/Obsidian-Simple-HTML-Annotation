@@ -184,6 +184,12 @@ body .ob-annotation-tooltip p {
     margin: 0;
 }
 
+/* Plain text tooltip content */
+body .ob-annotation-tooltip pre.ob-annotation-tooltip-plain {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
 
 /* ==========================================================================
    7. 表格样式支持 (Table Support in Tooltip)
@@ -301,10 +307,12 @@ body .ob-annotation-tooltip tr:nth-child(even) {
     border: 1px solid var(--background-modifier-border);
     color: var(--text-normal);
     border-radius: var(--input-radius);
+    width: 100%;
+    margin-bottom: 10px;
     padding: 10px;
     font-family: var(--font-text);
     /* 字体调大 */
-    font-size: var(--font-ui-medium); 
+    font-size: var(--font-ui-medium);
     line-height: 1.5;
     transition: all 0.2s ease;
     resize: none; /* Disable manual resize since we use auto-resize */
