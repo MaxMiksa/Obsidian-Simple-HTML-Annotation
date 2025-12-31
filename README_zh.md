@@ -1,79 +1,74 @@
 ﻿# Obsidian-Hover-Annotations | [English Doc](README.md)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg) ![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg) ![Obsidian API](https://img.shields.io/badge/Obsidian-API-4B3CFA.svg) ![Build: esbuild](https://img.shields.io/badge/build-esbuild-FFCF00.svg)
 
+✅ **选中即注 | 悬停即显 | 沉浸式阅读 | 纯文本存储**  
+✅ **Markdown 富文本渲染 | 多彩批注系统 | 移动端支持**  
+✅ **Obsidian 插件 | 跨平台 (桌面/移动) | 本地优先**  
+
 这款插件名为 **Hover Annotations**（悬停批注）：在 Obsidian 中可以**插入后自动隐藏批注内容，鼠标悬停时立即展示批注内容**，同时保持 Markdown 文件的纯文本兼容与本地存储安全。
 
-The plugin is called Hover Annotations: It allows you to **automatically hide annotation content after insertion and instantly display it upon mouse hover within Obsidian** while keeping plain-text compatibility and safe local storage.
+---
+
+## 插件功能速览 (Features)
+
+![Feature Overview](Presentation/v1.6.0/presentation.gif)
 
 ---
 
-### 插件功能速览 (Features)
+## 插件功能总结 (User Manual)
 
-![插件使用说明 v1 1 0 gif](https://github.com/user-attachments/assets/0e3bd7f0-c70a-48db-b2d7-f6a814c9a396)
-
----
-
-### 插件功能总结 (User Manual)
-
-*   **选中即注**：选中任意文本，通过命令快速添加批注信息。
-*   **悬浮查看**：鼠标移到批注文本上，会自动浮现气泡显示批注内容（支持上浮动画与原生主题适配）。
-*   **沉浸式编辑 (Live Preview)**：
-    *   在**编辑模式**下自动隐藏冗长的 HTML 标签（`<span...>`），仅给文本加橙色下划线，界面更简洁。
-    *   只有当光标移入批注文本内部时，源码才会展开，方便修改。
-*   **多彩批注 (8色)**：
-    *   支持 **红、橙、黄、绿、青、蓝、紫、灰** 8 种颜色。
-    *   **可视化选择**：在弹窗中直接点击圆形色块选择颜色，支持键盘操作。
-    *   **右键预览**：右键菜单中直观显示彩色圆点图标。
-*   **Markdown 支持 (New)**：
-    *   **富文本渲染**：悬浮批注完美支持 **Markdown 表格**、粗体、斜体、链接、代码块等格式。
-    *   **嵌套支持**：支持在表格单元格内添加包含表格的批注。
-*   **移动端支持**：在手机/平板上点击批注文本即可弹出显示内容。
-*   **高效操作**：
-    *   **快捷命令**：支持为“添加红色批注”等特定操作设置快捷键。
-    *   **一键显隐**：提供命令一键隐藏/显示所有批注样式，提供纯净阅读体验。
-*   **数据安全**：批注以标准 HTML `<span>` 标签存储在文件中，即使卸载插件也不会丢失。
-*   **批注修复能力**：一键修复旧版遗留的 data-note 格式问题。
-
-<img width="600" height="250" alt="image" src="https://github.com/user-attachments/assets/db8f682d-3e7f-45b8-bcd2-5ff41665edbc" />
-
-*示例 1 - 插入批注（推荐快捷键 `Alt+c`）*  
-
-<img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/a4b9e833-7430-4160-b287-1424aa46a3a5" />
-
-*示例 2 - 插入批注后将自动高亮对应文本*  
-
-<img width="600" height="250" alt="image" src="https://github.com/user-attachments/assets/22a82896-4349-427f-9ded-341caf2607f8" />
-
-*示例 3 - 显示批注内容（鼠标悬停时自动弹出批注内容）*  
-
-<img width="600" height="250" alt="image" src="https://github.com/user-attachments/assets/82bd523b-1a2e-46dd-b8aa-52acb08190b9" />
-
-*示例 4 - 批注以 HTML 永久安全储存在文件中（卸载插件后批注仍将保留）*  
+| 特性 | 描述 |
+| :--- | :--- |
+| **⚡ 选中即注** | 选中任意文本，通过命令快速添加批注信息。 |
+| **🗨️ 悬浮查看** | 鼠标移到批注文本上，会自动浮现气泡显示批注内容（支持上浮动画与原生主题适配）。 |
+| **👓 沉浸式编辑** | 在**编辑模式**下自动隐藏冗长的 HTML 标签，仅给文本加橙色下划线；光标移入时展开源码。 |
+| **🎨 多彩批注** | 支持 **红、橙、黄、绿、青、蓝、紫、灰** 8 种颜色，提供可视化选择与右键预览。 |
+| **📝 Markdown 支持** | 悬浮批注完美支持 **Markdown 表格**、粗体、斜体、链接、代码块等富文本格式。 |
+| **📱 移动端支持** | 在手机/平板上点击批注文本即可弹出显示内容。 |
+| **🚀 高效操作** | 支持为特定颜色设置快捷键；提供一键隐藏/显示所有批注样式命令。 |
+| **🛡️ 数据安全** | 批注以标准 HTML `<span>` 标签存储，即使卸载插件也不会丢失数据。 |
+| **🔧 自动修复** | 一键修复旧版遗留的 data-note 格式问题。 |
 
 ---
 
-### 使用方法
+## 使用方法
 
-**第一步：添加批注**
-1.  在笔记中选中一段文字（例如：“量子力学”），使用快捷键 Alt+c（使用前需自行设置）。
-2.  在弹出的输入框中写下批注（例如：“这里需要进一步查证资料”），回车或点击“确定”。
+<table>
+<tr>
+<td width="60%" valign="top">
 
-如果不想用快捷键，可以使用命令面板：
-1.  选中文本，按下命令面板快捷键（通常是 `Ctrl/Cmd + P`）。
-2.  输入 `HTML` 或 `Annotation` 搜索，找到命令 **“Hover Annotations: 添加批注 (HTML)”** 并回车。
-3.  在弹出的输入框中写下批注，回车或点击“确定”。
+### 第一步：添加批注
+**方法 A：使用快捷键（最快）**
+1. 在笔记中选中一段文字，按下 `Alt+c`（需在设置中自行绑定）。
+2. 在弹出的输入框中输入批注内容，按下回车或点击“确定”。
 
-**第二步：查看批注**
-*   你会看到原文出现**橙色下划线**与浅色背景。
-*   悬停鼠标即可看到刚才输入的批注内容。
+**方法 B：使用右键菜单**
+1. 选中文本后，右键点击。
+2. 在菜单中选择 **“添加批注”**。
 
-**第三步：修改/删除批注**
-*   **修改**：点击高亮文本并右键，选择“编辑批注”，修改内容后确认。
-*   **删除**：点击高亮文本并右键，选择“删除批注”，批注与高亮都会移除。
+**方法 C：使用命令面板**
+1. 选中文本后，按下 `Ctrl/Cmd + P` 打开命令面板。
+2. 输入 `Hover` 或 `Annotation` 搜索并执行 **“Hover Annotations: 添加批注（默认）”**。
+
+### 第二步：查看批注
+* 你会看到原文出现**橙色下划线**与浅色背景。
+* 悬停鼠标即可看到刚才输入的批注内容。
+
+### 第三步：修改/删除批注
+* **修改**：点击高亮文本并右键，选择“编辑批注”，修改内容后确认。
+* **删除**：点击高亮文本并右键，选择“删除批注”，批注与高亮都会移除。
+
+</td>
+<td width="40%" valign="top">
+<br>
+<img src="Presentation/v1.6.0/edit.png" alt="Edit Annotation" width="100%">
+</td>
+</tr>
+</table>
 
 ---
 
-### 未来改进路线图
+## <details><summary>🚀 未来改进路线图</summary>
 
 - [x]  1. 交互体验升级 (UI/UX) (2025-11-20完成)
 *   **右键菜单集成**：支持在选中文本后通过 `EditorMenu` 右键直接添加批注。
@@ -89,7 +84,7 @@ The plugin is called Hover Annotations: It allows you to **automatically hide an
 
 - [x] 4. 多彩批注 (2025-11-20完成)
 *   允许用户在弹窗中选择不同的批注颜色（如：红色代表疑问，绿色代表想法，黄色代表待办）。
-*   实现方式：在 HTML 中添加不同的 class，如 `class=\"ob-comment red\"`。
+*   实现方式：在 HTML 中添加不同的 class，如 `class="ob-comment red"`。
 
 - [x] 5. 图标模式 (2025-11-20完成)
 *   在设置里增加一个开关：选择“下划线模式”还是“文末图标模式”。
@@ -98,12 +93,13 @@ The plugin is called Hover Annotations: It allows you to **automatically hide an
 - [ ] 6. 导出与汇总 (暂搁置)
 *   **批注汇总**：一键提取当前文档的所有批注，生成新的 Markdown 列表（包含：原文、批注内容、位置链接），便于整理读书笔记。
 
+</details>
+
 ---
 
-### 联系方式
+## 🤝 贡献与联系
 
-Any questions or suggestions？Please contact Max Kong (Carnegie Mellon University, Pittsburgh, PA).
+欢迎提交 Issue 和 Pull Request！  
+如有任何问题或建议，请联系 Zheyuan (Max) Kong (卡内基梅隆大学，宾夕法尼亚州)。
 
-如有任何问题或建议，请联系 Max Kong (卡内基梅隆大学，宾夕法尼亚州匹兹堡)。
-
-Max Kong: kongzheyuan@outlook.com | zheyuank@andrew.cmu.edu
+Zheyuan (Max) Kong: kongzheyuan@outlook.com | zheyuank@andrew.cmu.edu
