@@ -28,9 +28,6 @@ The plugin is called **Hover Annotations**: It allows you to **automatically hid
 | **🛡️ Data Safety** | Annotations are stored as standard HTML `<span>` tags; safe even if the plugin is uninstalled. |
 | **🔧 Auto-Repair** | One-click fix for legacy data-note formatting issues. |
 
-<img width="600" height="250" alt="image" src="https://github.com/user-attachments/assets/db8f682d-3e7f-45b8-bcd2-5ff41665edbc" />
-***
-
 <table>
 <tr>
 <td width="60%" valign="top">
@@ -68,7 +65,9 @@ The plugin is called **Hover Annotations**: It allows you to **automatically hid
 
 ***
 
-## <details><summary>🚀 Future Roadmap</summary>
+<details>
+
+<summary>🚀 Future Roadmap</summary>
 
 - [x]  1. UI/UX Improvement (Completed 2025-11-20)
 *   **Context Menu Integration**: Right-click on selected text to quickly add an annotation via `EditorMenu`.

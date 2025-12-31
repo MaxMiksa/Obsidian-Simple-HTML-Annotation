@@ -68,7 +68,9 @@
 
 ---
 
-## <details><summary>🚀 未来改进路线图</summary>
+<details>
+
+<summary>🚀 未来改进路线图</summary>
 
 - [x]  1. 交互体验升级 (UI/UX) (2025-11-20完成)
 *   **右键菜单集成**：支持在选中文本后通过 `EditorMenu` 右键直接添加批注。
