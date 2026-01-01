@@ -222,6 +222,9 @@ const STRINGS = {
 
 type LocaleKey = keyof typeof STRINGS.en;
 
+type TranslationParam = string | number;
+type TranslateFn = (key: LocaleKey, params?: TranslationParam) => string;
+
 const COLOR_OPTIONS: { value: AnnotationColor; labelKey: LocaleKey; hex: string }[] = [
 	{ value: "red", labelKey: "colorRed", hex: "#e5484d" },
 	{ value: "", labelKey: "colorDefault", hex: "#ff9900" }, // Orange is default (empty class)
@@ -329,10 +332,10 @@ export default class AnnotationPlugin extends Plugin {
   locale: Locale = 'en';
   static lastUsedColor: AnnotationColor = DEFAULT_COLOR; // 记忆上次使用的颜色
 
-	t(key: LocaleKey, params?: any): string {
+	t(key: LocaleKey, params?: TranslationParam): string {
 		const entry = STRINGS[this.locale][key];
 		if (typeof entry === "function") {
-			return (entry as (p: any) => string)(params);
+			return (entry as (p: TranslationParam) => string)(params as TranslationParam);
 		}
 		return entry;
 	}
@@ -1203,9 +1206,9 @@ class AnnotationModal extends Modal {
 	colorLabelEl: HTMLElement | null = null; // 显示当前选中的颜色名称
 	onSubmit: (result: string, color: AnnotationColor) => void;
 	locale: Locale;
-	translate: (key: LocaleKey, params?: any) => string;
+	translate: TranslateFn;
 
-	constructor(app: App, defaultValue: string, defaultColor: AnnotationColor, onSubmit: (result: string, color: AnnotationColor) => void, locale: Locale, translate: (key: LocaleKey, params?: any) => string) {
+	constructor(app: App, defaultValue: string, defaultColor: AnnotationColor, onSubmit: (result: string, color: AnnotationColor) => void, locale: Locale, translate: TranslateFn) {
 		super(app);
 		this.defaultValue = defaultValue;
 		this.defaultColor = defaultColor;
@@ -1345,9 +1348,9 @@ class AnnotationModal extends Modal {
 class BatchFixConfirmModal extends Modal {
 	filesToFix: TFile[];
 	onConfirm: () => void;
-	translate: (key: LocaleKey, params?: any) => string;
+	translate: TranslateFn;
 
-	constructor(app: App, filesToFix: TFile[], onConfirm: () => void, translate: (key: LocaleKey, params?: any) => string) {
+	constructor(app: App, filesToFix: TFile[], onConfirm: () => void, translate: TranslateFn) {
 		super(app);
 		this.filesToFix = filesToFix;
 		this.onConfirm = onConfirm;
