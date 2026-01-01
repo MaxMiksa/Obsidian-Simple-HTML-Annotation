@@ -335,7 +335,7 @@ export default class AnnotationPlugin extends Plugin {
 	t(key: LocaleKey, params?: TranslationParam): string {
 		const entry = STRINGS[this.locale][key];
 		if (typeof entry === "function") {
-			return (entry as (p: TranslationParam) => string)(params as TranslationParam);
+			return (entry as (p: TranslationParam) => string)(params);
 		}
 		return entry;
 	}
