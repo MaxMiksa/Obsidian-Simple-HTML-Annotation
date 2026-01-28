@@ -83,7 +83,7 @@
 1. 在社区插件市场搜索并安装 **BRAT** 插件。
 2. 打开 BRAT 设置。
 3. 点击 **"Add Better Obsidian plugin"**。
-4. 输入 GitHub 仓库地址：`MaxMiksa/Obsidian-Simple-HTML-Annotation`。
+4. 输入 GitHub 仓库地址：`MaxMiksa/Obsidian-Hover-Annotations`。
 5. 点击 **"Add Plugin"**。
 
 ### 方法 3：手动安装
